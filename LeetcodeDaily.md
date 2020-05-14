@@ -77,6 +77,44 @@ U can Deduced `a = k * b - x`, that means U can start at the point `x` and conti
  0020000246
           |->
 ```
+# Week 184
+## `1408. String Matching in an Array`
+[*14 May 2020*] Failed at a easy question - -!
+**`Error 1`** sort 是案字母表顺序排列的 The sort algorithm is Alphabetical order
+`["leetcoder","leetcode","od","hamlet","am"]` After sort is `am hamlet  leetcode leetcoder od`.
+
+**`Error 2`** 找到之后应该返回，因为以及确定它是一个substring了。After finding it, it should be returned because it is a substring.
+
+**Others**
+1. Is better `words[i].find(words[j]) != words[i].npos` using `.npos` or `string::npos`
+2. 可以简单的以string长度排序不用lamba表达式。You can simply sort by string length without lamba expression. `sort(words.begin(),words.end(),lengthcompare);` `lengthcompare`
+
+## `1409. 查询带键的排列 Queries on a Permutation With Key`
+用了比较笨拙的方法，通过分析可知，`P`数组只有前一部分会发生移位，但是我确遍历了整个`map`。Using a clumsy method, through analysis we can see that only the first part of the `P` array will shift, but I did traverse the entire `map`
+
+**others**
+1. vector直接填递增值`itoa`Fill in increments directly `iota(p.begin(), p.end(), 1);`
+2. 树状数组
+
+
+## `1410. HTML 实体解析器 HTML Entity Parser`
+用了一个`hash`表做映射，感觉没什么好说的。I used a hash table to do the mapping, I feel there is nothing to say.
+为什么没能做到一次bug free？Why can't I do a bug free?
+`Error 1` the 2nd parameters of `substr` is length!!
+`Error 2` `substr` 2nd parameter can reach `text.size()`
+
+## `1411. 给 N x 3 网格图涂色的方案数 Number of Ways to Paint N × 3 Grid`
+一开始通过排列组合的方式分析了一遍，但是细节部分涉及条件概率，后决定用带记忆的递归。It was analyzed by permutation and combination at the beginning, but the details involved conditional probability, and then decided to use recursion with memory.
+
+第0行和第0列比较好计算，但是如果涉及到第1行第1列，有两种情况要考虑。Row 0 and column 0 are easier to calculate, but if it involves row 1, column 1, there are two cases to consider.
+1. `p[0][1] == p[1][0]`颜色相同Same color `dp[1][1] = 2`
+2. `p[0][1] != p[1][0]`颜色不同Different colors`dp[1][1] = 1`
+
+可能还是回溯法好写一点，然后再加上记忆。It may be better to write a bit backtracking, and then add memory.
+1. 回溯就是先只考虑这一层，如果再进入下一层填颜色时发现相同的返回0，填完未发现相同返回1。Backtracking is to only consider this layer first, if you enter the next layer to fill the color and find the same return 0, after filling, you do not find the same return 1.
+
+**others**
+1. 大佬的思路真是五花八门还是要找一个适合自己的路子。The idea of the big brother is really diverse, it is important to find a way that suits you.
 
 
 
