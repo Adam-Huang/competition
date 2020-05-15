@@ -1,4 +1,63 @@
 **时间顺序排列（Chronological order）**
+[*15 May 2020*]
+# Daily Task
+## `560. Subarray Sum Equals K`
+Prefix & Hash? Yes!
+
+# Game weekly 183
+## `1403. 非递增顺序的最小子序列 Minimum Subsequence in Non-Increasing Order`
+本题实际上是求刚好大于数组和一半的最短子数组，并逆序排列输出。This question is actually to find the shortest sub-array that is just larger than the half of array, and arrange the output in reverse order.
+1. Sort First
+2. Find the first time of appear `pre[n] - pre[i] > pre[i]` Simplify as `pre[n] > 2 * pre[i]`, But because I traversal it from left to right, It must satisfy at beginning. so I find first point which `2 * pre[i] >= pre[n]` the i should be substracted 1.
+
+For example, the index of output is `4`:
+```
+0 1  2  3  4  5
+3 4  8  9 10
+0 3  7 15 24 34  half is [17]
+  6 14 30 48
+           |-> satisfy 
+```
+Using vector construct function:`ans = vector<int>(nums.begin() + i - 1,nums.end());` **Attention to the region with Close Left and Open Right**
+
+**others**
+1. Sort by `sort(nums.begin(), nums.end(), greater<int>());` and Without prefix.
+
+## `1404. 将二进制表示减到 1 的步骤数 Number of Steps to Reduce a Number in Binary Representation to One`
+就是逻辑题，做的时候还花了点时间。It’s a logic question, and it took some time to do it. However, compared with *substract 1*, *plus 1* is more complicated.
+
+## `1405. 最长快乐字符串 1405. Longest Happy String`
+这题写的不优雅，看看别人怎么写的。This question sovled without elegant, see how others wrote it.
+
+**others**
+1. This is a elegant one:
+```
+string longestDiverseString(int a, int b, int c) {
+        vector<vector<char>> v;
+        v.push_back({(char)a, 'a'});
+        v.push_back({(char)b, 'b'});
+        v.push_back({(char)c, 'c'});
+
+        string res;
+        while (res.size() < a + b + c) {//2. judge condition
+            sort(v.rbegin(), v.rend());//1. sort reserve 
+
+            if ((res.size() > 0) && (res.back() == v[0][1])) {
+                if (v[1][0]-- > 0) res.push_back(v[1][1]);
+                else return res;
+            } else {
+                if (v[0][0]-- > 0) res.push_back(v[0][1]);// every time push two element.
+                if (v[0][0]-- > 0) res.push_back(v[0][1]);
+            }
+            cout << res << "  -> "<< v[1][1] << endl;
+        }
+        return res;
+    }
+```
+It is really elegant, but hard to think. But, at least U should know Using a `map` to choose a char insert.
+
+## `1406. 石子游戏 III Stone Game III`
+用的是带记忆递归，效率不是特别好。Use recursion with memory, efficiency is not particularly good.一开始被博弈搞糊涂了，这次记住了，博弈就减去别人拿走的值即可。I was confused by the game at first, remember this time, the game just subtracts the value taken by others.
 
 # Game 24 Biweekly
 ## `1414. 和为 K 的最少斐波那契数字数目（Find the Minimum Number of Fibonacci Numbers Whose Sum Is K`
@@ -7,7 +66,6 @@ BUT it's `time limit exceed`
 Ok. Fine. Although I don't understand the certification U can remember It..
 Greedy Algorithm.
 Although the certification is not clear.
-
 
 ## `1415. The k-th Lexicographical String of All Happy Strings of Length n`
 ```
