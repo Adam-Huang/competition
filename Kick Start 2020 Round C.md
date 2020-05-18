@@ -66,7 +66,179 @@ int main(){
 =。=！以后不要傻呵呵的模拟，重要的是保留相互关系。Don't imitate silly simulations in the future, the important thing is to preserve the relationship.
 
 # Perfect Subarray
+如何压缩耗时？How to compress time-consuming?
+核心代码Core code:`if (mp.count(sum[i] - j * j)) ans += mp[sum[i] - j * j];`
+```
+idx 0   1   2   3   4   5   6
+arr    30  30   9   1   30
+pre 0  30  60  69  70   100
+--------------------------------------------------
+        |       |       ->         My Solution:
+       p1       p2      -> dobule pointers O(n^2) 
+--------------------------------------------------
+                |
+              <-| trun back       Refer Solution
+```
+这个方法好就好在，限定了搜索范围为`[minvalue~pre[i]]`，而且搜索步长为`i * i`。The good thing about this method is that the search range is limited to `[minvalue ~ pre [i]]`, and the search step size is `i * i`.
 
+1. 前缀和的最小值，为跳出循环的条件。The minimum value of the prefix sum is the condition for break of the loop.因为`pre[i] - pre[j]`可以获得`[j,i)`的区间和，如果`per[j]`已经取得最小值，则区间和不可能更大。Because `pre [i]-pre [j]` can obtain the interval sum of `[j, i)`, if `per [j]` has already obtained the minimum value, the interval sum cannot be larger.再想上寻找已经没有意义了。It doesn't make sense to find upper again.
+
+其实和leetcode的第一个twosum不是一样的嘛。In fact, it is not the same as the first twosum of leetcode.
+
+以下是参考代码和调试打印。The following is the reference code and debug printing.
+[Referring code](https://blog.csdn.net/tomjobs/article/details/106184623):
+```cpp
+#include <cstdio>
+#include <cstring>
+#include <map>
+#include <algorithm>
+#include <unordered_map>
+using namespace std;
+
+typedef long long ll;
+const int maxn = 2e5 + 7;
+const int INF = 1e7 + 7;
+
+unordered_map<int, int> mp;
+int a[maxn], sum[maxn];
+
+int main() {
+	int T; scanf("%d", &T);
+	int kase = 0;
+	while (T--) {
+		int n; scanf("%d", &n);
+		int mi = 0;
+		for (int i = 1; i <= n; i++) {
+			scanf("%d", &a[i]);
+			sum[i] = sum[i - 1] + a[i];
+			mi = min(mi, sum[i]);//First, set the minimum value for prefix
+		}
+		mp.clear();
+		ll ans = 0;
+		mp[0] = 1;
+		printf("_______________\n");
+		for (int i = 1; i <= n; i++) {
+			for (int j = 0; j * j < INF; j++) {
+				printf("i:%d |sum[i]:%d |j: %d | mp.size():%d | find:%d | ans:%d\n",i, sum[i],j,mp.size(), sum[i] - j * j,ans);
+				if (mp.count(sum[i] - j * j)) ans += mp[sum[i] - j * j];
+				if (sum[i] - j * j < mi) break;
+			}
+			printf("_______________\n");
+			mp[sum[i]]++;
+		}
+
+		printf("Case #%d: %lld\n", ++kase, ans);
+	}
+	return 0;
+}
+```
+```
+3
+3
+2 2 6
+_______________
+i:1 |sum[i]:2 |j: 0 | mp.size():1 | find:2 | ans:0
+i:1 |sum[i]:2 |j: 1 | mp.size():1 | find:1 | ans:0
+i:1 |sum[i]:2 |j: 2 | mp.size():1 | find:-2 | ans:0
+_______________
+i:2 |sum[i]:4 |j: 0 | mp.size():2 | find:4 | ans:0
+i:2 |sum[i]:4 |j: 1 | mp.size():2 | find:3 | ans:0
+i:2 |sum[i]:4 |j: 2 | mp.size():2 | find:0 | ans:0
+i:2 |sum[i]:4 |j: 3 | mp.size():2 | find:-5 | ans:1
+_______________
+i:3 |sum[i]:10 |j: 0 | mp.size():3 | find:10 | ans:1
+i:3 |sum[i]:10 |j: 1 | mp.size():3 | find:9 | ans:1
+i:3 |sum[i]:10 |j: 2 | mp.size():3 | find:6 | ans:1
+i:3 |sum[i]:10 |j: 3 | mp.size():3 | find:1 | ans:1
+i:3 |sum[i]:10 |j: 4 | mp.size():3 | find:-6 | ans:1
+_______________
+Case #1: 1
+------------------------------------------------------------------
+5
+30 30 9 1 30
+_______________
+i:1 |sum[i]:30 |j: 0 | mp.size():1 | find:30 | ans:0
+i:1 |sum[i]:30 |j: 1 | mp.size():1 | find:29 | ans:0
+i:1 |sum[i]:30 |j: 2 | mp.size():1 | find:26 | ans:0
+i:1 |sum[i]:30 |j: 3 | mp.size():1 | find:21 | ans:0
+i:1 |sum[i]:30 |j: 4 | mp.size():1 | find:14 | ans:0
+i:1 |sum[i]:30 |j: 5 | mp.size():1 | find:5 | ans:0
+i:1 |sum[i]:30 |j: 6 | mp.size():1 | find:-6 | ans:0
+_______________
+i:2 |sum[i]:60 |j: 0 | mp.size():2 | find:60 | ans:0
+i:2 |sum[i]:60 |j: 1 | mp.size():2 | find:59 | ans:0
+i:2 |sum[i]:60 |j: 2 | mp.size():2 | find:56 | ans:0
+i:2 |sum[i]:60 |j: 3 | mp.size():2 | find:51 | ans:0
+i:2 |sum[i]:60 |j: 4 | mp.size():2 | find:44 | ans:0
+i:2 |sum[i]:60 |j: 5 | mp.size():2 | find:35 | ans:0
+i:2 |sum[i]:60 |j: 6 | mp.size():2 | find:24 | ans:0
+i:2 |sum[i]:60 |j: 7 | mp.size():2 | find:11 | ans:0
+i:2 |sum[i]:60 |j: 8 | mp.size():2 | find:-4 | ans:0
+_______________
+i:3 |sum[i]:69 |j: 0 | mp.size():3 | find:69 | ans:0
+i:3 |sum[i]:69 |j: 1 | mp.size():3 | find:68 | ans:0
+i:3 |sum[i]:69 |j: 2 | mp.size():3 | find:65 | ans:0
+i:3 |sum[i]:69 |j: 3 | mp.size():3 | find:60 | ans:0
+i:3 |sum[i]:69 |j: 4 | mp.size():3 | find:53 | ans:1
+i:3 |sum[i]:69 |j: 5 | mp.size():3 | find:44 | ans:1
+i:3 |sum[i]:69 |j: 6 | mp.size():3 | find:33 | ans:1
+i:3 |sum[i]:69 |j: 7 | mp.size():3 | find:20 | ans:1
+i:3 |sum[i]:69 |j: 8 | mp.size():3 | find:5 | ans:1
+i:3 |sum[i]:69 |j: 9 | mp.size():3 | find:-12 | ans:1
+_______________
+i:4 |sum[i]:70 |j: 0 | mp.size():4 | find:70 | ans:1
+i:4 |sum[i]:70 |j: 1 | mp.size():4 | find:69 | ans:1
+i:4 |sum[i]:70 |j: 2 | mp.size():4 | find:66 | ans:2
+i:4 |sum[i]:70 |j: 3 | mp.size():4 | find:61 | ans:2
+i:4 |sum[i]:70 |j: 4 | mp.size():4 | find:54 | ans:2
+i:4 |sum[i]:70 |j: 5 | mp.size():4 | find:45 | ans:2
+i:4 |sum[i]:70 |j: 6 | mp.size():4 | find:34 | ans:2
+i:4 |sum[i]:70 |j: 7 | mp.size():4 | find:21 | ans:2
+i:4 |sum[i]:70 |j: 8 | mp.size():4 | find:6 | ans:2
+i:4 |sum[i]:70 |j: 9 | mp.size():4 | find:-11 | ans:2
+_______________
+i:5 |sum[i]:100 |j: 0 | mp.size():5 | find:100 | ans:2
+i:5 |sum[i]:100 |j: 1 | mp.size():5 | find:99 | ans:2
+i:5 |sum[i]:100 |j: 2 | mp.size():5 | find:96 | ans:2
+i:5 |sum[i]:100 |j: 3 | mp.size():5 | find:91 | ans:2
+i:5 |sum[i]:100 |j: 4 | mp.size():5 | find:84 | ans:2
+i:5 |sum[i]:100 |j: 5 | mp.size():5 | find:75 | ans:2
+i:5 |sum[i]:100 |j: 6 | mp.size():5 | find:64 | ans:2
+i:5 |sum[i]:100 |j: 7 | mp.size():5 | find:51 | ans:2
+i:5 |sum[i]:100 |j: 8 | mp.size():5 | find:36 | ans:2
+i:5 |sum[i]:100 |j: 9 | mp.size():5 | find:19 | ans:2
+i:5 |sum[i]:100 |j: 10 | mp.size():5 | find:0 | ans:2
+i:5 |sum[i]:100 |j: 11 | mp.size():5 | find:-21 | ans:3
+_______________
+Case #2: 3
+------------------------------------------------------------------
+4
+4 0 0 16
+_______________
+i:1 |sum[i]:4 |j: 0 | mp.size():1 | find:4 | ans:0
+i:1 |sum[i]:4 |j: 1 | mp.size():1 | find:3 | ans:0
+i:1 |sum[i]:4 |j: 2 | mp.size():1 | find:0 | ans:0
+i:1 |sum[i]:4 |j: 3 | mp.size():1 | find:-5 | ans:1
+_______________
+i:2 |sum[i]:4 |j: 0 | mp.size():2 | find:4 | ans:1
+i:2 |sum[i]:4 |j: 1 | mp.size():2 | find:3 | ans:2
+i:2 |sum[i]:4 |j: 2 | mp.size():2 | find:0 | ans:2
+i:2 |sum[i]:4 |j: 3 | mp.size():2 | find:-5 | ans:3
+_______________
+i:3 |sum[i]:4 |j: 0 | mp.size():2 | find:4 | ans:3
+i:3 |sum[i]:4 |j: 1 | mp.size():2 | find:3 | ans:5
+i:3 |sum[i]:4 |j: 2 | mp.size():2 | find:0 | ans:5
+i:3 |sum[i]:4 |j: 3 | mp.size():2 | find:-5 | ans:6
+_______________
+i:4 |sum[i]:20 |j: 0 | mp.size():2 | find:20 | ans:6
+i:4 |sum[i]:20 |j: 1 | mp.size():2 | find:19 | ans:6
+i:4 |sum[i]:20 |j: 2 | mp.size():2 | find:16 | ans:6
+i:4 |sum[i]:20 |j: 3 | mp.size():2 | find:11 | ans:6
+i:4 |sum[i]:20 |j: 4 | mp.size():2 | find:4 | ans:6
+i:4 |sum[i]:20 |j: 5 | mp.size():2 | find:-5 | ans:9
+_______________
+Case #3: 9
+```
 # Candies
 这题是不是有什么套路呀，大家都这样做Is there any routine for this question, everyone does this
 refer 1:
