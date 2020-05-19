@@ -63,12 +63,19 @@ II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how
 ## `34. Find First and Last Position of Element in Sorted Array`
 这题是二分法的延伸，找区间，值得注意的是找右区间时记得减去1，原因如上。This question is an extension of the dichotomy. Find the interval. It is worth noting that you should subtract 1 when you find the right interval. The reason is as above.
 
+
+
 # Dynamic Programming
 ## `53. Maximum Subarray`
 没想到动态规划这么快就来了，连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
 
+## `221. Maximal Square`
+这道题就比较容易看出来是动态规划。而且递推方程也好写。This question is easier to see as dynamic programming.And recursive equations are also easy to write.
+
+## Stock related 
+[Good reference](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/solution/yi-ge-fang-fa-tuan-mie-6-dao-gu-piao-wen-ti-by-l-3/)
 
 
 # hash
@@ -92,12 +99,6 @@ I sloved it again [*6 May 2020*] with an error:
 `error 1: ` ` n1 = - n; //if n = -2147483648; it error!` How to convert it should be noted.
 转换负数为正数时，要先强制类型转换成`long long`，不然也是溢出。When converting negative numbers to positive numbers, you must first cast the type to `long long`, otherwise it will also integer overflow
 `ll pow = (flag ? n : -(ll)n); // Attention`
-
-# Stack
-## `20. Valid Parentheses`
-`Error 2` 写得不优雅就算了，上次被空串坑，这次又被`"["` 难倒了。哎
-Even if it is not elegant, the last time I was pitted by an empty string, this time I was stumped by `"["`.
-`Error 3` 用栈可以很优雅。Using the stack can be very elegant.但是也被坑了一次But also got pitted once `"]"` Be careful when pop from a stack!!
 
 # Link
 ## `21. Merge Two Sorted Lists`
@@ -130,6 +131,32 @@ array([[ 0,  1,  2,  3],  |array([[ 0,  4,  8, 12],  |array([[ 3,  7, 11, 15],  
 方案2 如前序所述As mentioned in the preface
 类似的题目还有一个什么螺旋打印矩阵。There is a spiral printing matrix for a similar problem.
 
+# Others
+## `670. Maximum Swap`
+最多一次交换。所以要尽可能将最大值放在最高位。At most one exchange.Therefore, the maximum value should be placed as high as possible.
+我用的方法和题解第二个类似The method I used is similar to the second item.
+- 首先一次遍历记录最大值，及其位置。First traverse the record maximum value and its position
+- 然后二次遍历，从高往低，找到比该位最大值小的位，交换。Then traverse twice, from high to low, find the bit smaller than the maximum value of the bit, and exchange.
+```
+idx  0 1 2 3 
+v    2 7 3 6
+                <- get max
+max  7 7 6 6
+     |-> exchange 1 and idx 0
+maid 1 1 3 3
+```
+# Sliding Windows
+## `209. Minimum Size Subarray Sum`
+这个题限定了是正整数，目标和**范围**，求最小连续子数组。已经很明显是滑动窗口了。This question is limited to positive integers, range of target sums, and finding the minimal length of continuous sub-array.It is clearly a sliding window.
+
+
+# Stack
+## `20. Valid Parentheses`
+`Error 2` 写得不优雅就算了，上次被空串坑，这次又被`"["` 难倒了。哎
+Even if it is not elegant, the last time I was pitted by an empty string, this time I was stumped by `"["`.
+`Error 3` 用栈可以很优雅。Using the stack can be very elegant.但是也被坑了一次But also got pitted once `"]"` Be careful when pop from a stack!!
+
+
 # Tree
 ## `235. Lowest Common Ancestor of a Binary Search Tree`
 二叉搜索树的LCA，第一次将两个数值分开的节点就是了。For the LCA of the binary search tree, the first time is to separate the two values. 考虑到边界，其实就是只要不是同时严格大于或者严格小于的节点。Considering the boundary, in fact, as long as it is not a node that is strictly greater than or strictly less than is the LCA.
@@ -150,3 +177,38 @@ TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
 	return nullptr;
 }
 ```
+
+## `236. Lowest Common Ancestor of a Binary Tree`
+经典LCA，我好像只会用带vector记录路径的方法。Classic LCA, I seem to only use the method of recording paths with vector.
+
+**others**
+参考图解[Reference illustration](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/solution/236-er-cha-shu-de-zui-jin-gong-gong-zu-xian-hou-xu/)
+```cpp
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if(root == NULL)
+            return NULL;
+        if(root == p || root == q) //1. Found! return the node
+            return root;
+            
+        TreeNode* left =  lowestCommonAncestor(root->left, p, q);
+        TreeNode* right = lowestCommonAncestor(root->right, p, q);//2. receive the node
+       
+        if(left == NULL) //3. if left empty, return right
+            return right;
+        if(right == NULL)
+            return left;      
+        if(left && right) // p和q在两侧
+            return root;
+        
+        return NULL; // 必须有返回值
+    }
+};
+```
+
+## `98. Validate Binary Search Tree`
+还是中序遍历好，记得设置记录前值的`pre`为`long long`。It is better to traverse in order, remember to set the `pre` value of the record to `long long`.
+
+# Two pointers
+
