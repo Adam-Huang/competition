@@ -1,4 +1,19 @@
 **时间顺序排列（Chronological order）**
+
+[*19 May 2020*]
+## `680. Valid Palindrome II`
+我用的双指针，因为最多删除一个，就是左指针left和右指针right有一个跳了一次，即`++left`或者`--right`；I used the double pointer, because at most one is deleted, that is, the `left` pointer left and the `right` pointer have one jump, that is, `++ left` or` --right`;
+也就是最多三种情况，两次`O(n)`的循环。That is, at most three cases, two `O (n)` cycles.
+**others**
+
+## `面试题 04.06. Successor LCCI`
+`Error 1` 标志位传值没有传引用！！！！The Label variable deliver value but reference!!!
+## `63. Unique Paths II`
+简单的动态规划Simple dynamic programming with an error:
+`error 1`: start point is obstacles?!
+`dp[0][0] = oG[0][0]?0:1;//error 1: start point is obstacles?!`
+
+
 [*15 May 2020*]
 # Daily Task
 ## `560. Subarray Sum Equals K`
