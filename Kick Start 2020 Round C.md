@@ -1,3 +1,6 @@
+# reference
+[1.](https://mp.weixin.qq.com/s/YMC7mpYSMUIWKkvBzD5jbQ)
+
 # Countdown
 Easy question. Time complexity is at most `10^7`.
 
@@ -241,7 +244,57 @@ Case #3: 9
 ```
 # Candies
 这题是不是有什么套路呀，大家都这样做Is there any routine for this question, everyone does this
-refer 1:
+
+[*22 May 2020*]
+## line tree: 
+reference: [线段树详解](https://www.cnblogs.com/AC-King/p/7789013.html)、[线段树从零开始](https://blog.csdn.net/zearot/article/details/52280189)、[本题讲解](https://blog.csdn.net/tomjobs/article/details/106184670)
+关于线段树的基本概念和图解上述第二个链接说的挺好的了。The basic concept and illustration of the line tree is quite good. 以下是一些细节Here are some details
+
+### 存储结构
+可类比完全二叉树的数组存储结构。The storage structure can be compared with the array storage structure of the complete binary tree. 每个节点存储的是一个区间的和（或者其他的什么都可以）Each node stores the sum of an interval (or anything else)
+```
+[ 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16] -> the index of array.
+-> Line Tree : complete binary Tree
+              0[1,5]
+		/              \
+		1[1,3]          2[4,5]
+	/       \       /      \
+	3[1,2]  4      5        6
+  /   \   /   \  /    \   /    \
+  7   8   9   10 11   12  13   14
+ / \ / \ / \ / \/ \   / \/ \   / \
+15 16 ...
+```
+![图示](https://img-blog.csdn.net/20150909172350036?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+### construct
+构造是从下到上的（树的角度）。The structure is from bottom to top (tree perspective).
+```cpp
+#define maxn 100007  //元素总个数  
+int Sum[maxn<<2];//Sum求和，开四倍空间
+int A[maxn],n;//存原数组下标[1，n]
+
+//PushUp函数更新节点信息，这里是求和
+void PushUp(int rt){
+    Sum[rt]=Sum[rt<<1]+Sum[rt<<1|1];
+}
+//Build函数建立线段树
+void Build(int l,int r,int rt){ //[l,r]表示当前节点区间，rt表示当前节点的实际存储位置 
+    if(l==r) {//若到达叶节点 
+        Sum[rt]=A[l];//存储A数组的值
+        return;
+        }
+    int m=(l+r)>>1; 
+    //左右递归
+    Build(l,m,rt<<1); //左子树
+    Build(m+1,r,rt<<1|1); //右节点
+    //更新信息
+    PushUp(rt); //根据左右节点的值更新父节点
+}
+
+```
+
+
+## refer code:
 ```cpp
 #include<bits/stdc++.h>
 using namespace std;
