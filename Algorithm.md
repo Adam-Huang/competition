@@ -2,6 +2,95 @@
 旨在通过归纳总结做过的习题以及遇到的问题，抽象提炼以完善自身思维和代码能力。
 It aims at summarizing the exercises and problems encountered, and abstracting them to improve my thoughts and coding skills.
 
+# array
+## Trapping Rain Water
+- [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。It is related to rainwater, because it is the amount of rainwater determined by the short side, so you only need to move the short side each time.
+
+
+
+# Back Tracking
+## `Permutations`
+可见`46. Permutations` 以及`47. Permutations II`，
+总而言之，排列问题是比较好写的，因为终点明确，就是`now.size() == nums.size()`。 In short, the Permutations problem is relatively easy to write, because the end point is clear, that is `now.size() == nums.size()`.
+
+### `47. Permutations II`
+此题重点在去重复项。This question focuses on removing duplicates.
+去重的题目有几个，方法也有不少，这里总结这个：There are several topics for deduplication, and there are many methods. Here is a summary:
+Key code: `if(i > 0 && nums[i] == nums[i - 1] && L[i - 1]) continue;` or `if(i > 0 && nums[i] == nums[i - 1] && !L[i - 1]) continue;`
+```
+                  [1,1,2]
+         |           |-> be cut off if !L[i - 1] and safe with L[i - 1]
+         1           1            2
+      /     \     /     \      /     \
+	  1     2     1     2      1     1 |-> be cut off if !L[i - 1]
+	  |     |     |     |      |     |
+	  2     1     2     1      1     1
+	                           |-> be cut off if L[i - 1]
+```
+这里的去重可以有两种选择，关键都是考察上一个相同的数字是否被用过。There are two options for deduplication here, the key is to check whether the last same number has been used.
+
+### `60. Permutation Sequence`
+第`K`个排列，`K`th Permutation. 
+这个题和`1415. The k-th Lexicographical String of All Happy Strings of Length n`很类似，只不过那个限定了只使用`"abc"`。This question is very similar to `1415. The k-th Lexicographical String of All Happy Strings of Length n`, except that it is limited to the use of` "abc" `
+思路是一样的，**先计算一个数枝上的总的节点数**，利用商和余计算。有两点需要注意：The idea is the same, **first calculate the total number of nodes on a branch**, and Calculate with Quotient and Remainder.There are two points to note:
+1. `K`的取值范围不是`[1,K]`而是`[0,K - 1]`，因此计算前需要`--k`。The value range of `K` is not `[1, K]` but `[0, K-1]`, so `--k` is required before calculation.
+2. 排列每次都是从头开始计数的，不是从上一次的结果，这一点从前一题的全排列实现也能看出来。The permutation is counted from the beginning every time, not from the last result. This can also be seen from the realization of the whole permutation of the previous question.
+FOR EXAMPLE:
+```
+                                                 n = 3, k = 3
+1         1      |      2      |     3           total = 6  
+2     2      3   |   1     3   |  1     2        total = 2  
+3     3      2   |   3     1   |  2     1        total = 1
+      |      |   |   |     |   |  |     |
+	  1      2       3     4      5     6
+```
+**Be careful that the middle colmnu row 2 is `1 -- 3` not `3 -- 1`**
+
+## `Combinations`
+### `77. Combinations`
+这是一个常规组合问题。This is a conventional combination problem.画出递归树后很容易发现，要想去重只要设置每次只放置比前一个值大的值即可。After drawing the recursive tree, it is easy to find that if you want to deduplicate, you only need to set a value greater than the previous one each time.
+`if(now.empty() || now.back() < i)`
+```
+n = 4, k = 2
+     1       2       3        4
+   / | \   / | \   / | \    / | \
+   2 3 4   1 3 4   1 2 4    1 2 3
+```
+### `39. Combination Sum`
+求组合和等于`target`的所有情况。Find all cases where the combined sum is equal to target. I draw the recursive tree again.
+```
+[2,3,6,7] target = 7
+       2       C  3         6         7
+	/ | | \    / | | \   / | | \   / | | \
+	2 3 6 7    2 3 6 7   2 3 6 7   2 3 6 7
+	| |        | |
+	....
+```
+If I want to cut the duplicates all I need do is Just find target forward.
+### `40. Combination Sum II`
+It have same target as `39`, But each number in the `candidates` may only be used once in the combinations. Recursive Tree:
+```
+[10,1,2,7,6,1,5]  target = 8
+    1     1     2     5      6    7   10
+  /...\ /...\
+  1 2.. 2 5..
+         |-> be included by 1
+---------------------------------------
+[2,5,2,1,2]  target = 5
+          1             2   2   2   5
+        /...\
+      2   2   2
+     / \ / \  |
+     2 2 2 5  5 
+```
+这题相对上一题限定了每个元素只能用一次，但是元素值会有重复项。Compared with the previous question, this question limits the use of each element only once, but the element value will have duplicates. 
+我之前[*16 May 2020*]用的是：
+现在用的是：
+1. 承接上一题思路，排序之后`i`元素查找范围限定在`[i + 1, n)`；Following the ideas of the previous question, the search range of the `i` element after sorting is limited to `[i + 1, n)`
+2. 遇到重复项，只有在第一次使用重复项时后面的重复项才会被使用。Encountered duplicate items, only the next duplicate items will be used when the duplicate items are used for the first time. 还是这句话：Still this sentence: 
+`if(i > 0 && nums[i] == nums[i - 1] && !L[i - 1]) continue;`
+换而言之，如果前面的`ele[i]`没被用过，那么和`ele[i]`值相等的`ele[i + 1]`也不使用。In other words, if the previous `ele [i]` has not been used, then `ele [i + 1]` with the same value as `ele [i]` will not be used.
+
 # bit manipulation
 ## `137. Single Number II`
 Have I sloved the problem? Yes , at: 5 mothes ago [*2020 28 April*]
@@ -63,11 +152,27 @@ II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how
 ## `34. Find First and Last Position of Element in Sorted Array`
 这题是二分法的延伸，找区间，值得注意的是找右区间时记得减去1，原因如上。This question is an extension of the dichotomy. Find the interval. It is worth noting that you should subtract 1 when you find the right interval. The reason is as above.
 
+## `162. Find Peak Element`
+找到任意一个峰值即可，我用的方法是二分，但是考察的是`middle`两侧的值，这个有点类似[这题]。You can find any peak. The method I used is Binary Serach, but the values on both sides of the middle are cased. This is similar to [this question].
+**others**
+```cpp
+int findPeakElement(vector<int>& nums) {
+        int l=0,r=nums.size();
+        while(l<r){
+            int mid=l+(r-l)/2;
+            if((mid+1<nums.size())&&nums[mid]<nums[mid+1]) l=mid+1;
+            else r=mid;
+        }
+        return l;
+    }
+```
+这种解法，还有其他题目的一些精简解法，本质思想是一样的。This solution, as well as some simplified solutions to other topics, the essential idea is the same.
+二分查找，不是左边就是右边。如果能在一个特定的条件下，确实是左边。那超出这个条件就是右边。（这话说着我有点心虚呀- -!）Binary search, either left or right.If it can be under a specific condition, it is indeed the left.That exceeds this condition is the right.(This is saying with a guilty conscience--!)
 
 
 # Dynamic Programming
 ## `53. Maximum Subarray`
-没想到动态规划这么快就来了，连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
+连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
 
@@ -76,6 +181,40 @@ II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how
 
 ## Stock related 
 [Good reference](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/solution/yi-ge-fang-fa-tuan-mie-6-dao-gu-piao-wen-ti-by-l-3/)
+
+### `121. Best Time to Buy and Sell Stock`
+感觉还是不是很清楚还需要多看看。I still don't feel very clear. I need to see more.
+```cpp
+int maxProfit(vector<int>& prs) {
+        int n = prs.size();
+        int dp_i_1_1 = -1e9, dp_i_1_0 = 0, dp_i_0_0 = 0, dp_i_0_1 = -1e9;
+        for(int i = 0; i < n; ++i){
+            dp_i_1_0 = max(dp_i_1_0,dp_i_1_1 + prs[i]);
+            dp_i_1_1 = max(dp_i_1_1,dp_i_0_0 - prs[i]);
+        }
+        return dp_i_1_0;
+    }
+```
+`dp_i_1_1` 三个下划线分割的意思分别是：第`i`天，交易了`1`或`0`次，目前手上是持有`1`或没有`0`股票。The meaning of the three underscores is: on the `i` day, the` 1` or `0` transaction was traded, currently holding` 1` or `0` no stock.
+
+初始化的时候虽然我写的也是`i`天，但其实是第`0`天啦。Although I wrote the `i` day during initialization, it was actually the` 0` day. 在第`0`天，持有股票是不可能事件，可以将这种情况设置为成本极高`-1e9`，不持有股票的成本是`0`。On the day of `0`, holding stocks is an impossible event. You can set this to an extremely high cost of` -1e9`, and the cost of not holding stocks is `0`.
+
+### `122. Best Time to Buy and Sell Stock II`
+没有交易次数限制就是减少一个维度 No limit on the number of transactions is to reduce one dimension
+```cpp
+int maxProfit(vector<int>& prices) {
+        int dp_i_0 = 0, dp_i_1 = -1e9, n = prices.size();
+        for(int i = 0; i < n; ++i){
+            dp_i_0 = max(dp_i_0,dp_i_1 + prices[i]);
+            dp_i_1 = max(dp_i_1,dp_i_0 - prices[i]);
+        }
+        return dp_i_0;
+    }
+```
+
+# Greedy
+以跳跃游戏为例，是贪心算法。如何从题目中分离出是贪心算法才是关键。Take the jump game as an example, it is a greedy algorithm.How to separate from the problem is the greedy algorithm is the key. 此外还有一些细节需要考虑：There are also some details to consider:
+1. 跳（动作）、在一个范围内搜索、选择下一次跳跃点（同时也会确定下一次搜索范围）是三个分开的过程。Jumping (the action), searching within a range, and selecting the next jump point (also determining the next search range) are three separate processes. 保险起见，一开始可以申请尽可能多的变量，以免死循环。For insurance purposes, you can apply for as many variables as possible to avoid endless loops.
 
 
 # hash
@@ -103,6 +242,12 @@ I sloved it again [*6 May 2020*] with an error:
 # Link
 ## `21. Merge Two Sorted Lists`
 这个是基础，太重要了，必须快速、准确的写出代码。This is the foundation, which is too important. The code must be written quickly and accurately.
+
+## Two array or links
+[`2. Add Two Numbers`](https://leetcode-cn.com/problems/add-two-numbers/)  You can read more details
+[`88. Merge Sorted Array` ](https://leetcode-cn.com/problems/merge-sorted-array/)
+
+
 
 # Pattern matching
 ## `28. Implement strStr()`
@@ -209,6 +354,20 @@ public:
 
 ## `98. Validate Binary Search Tree`
 还是中序遍历好，记得设置记录前值的`pre`为`long long`。It is better to traverse in order, remember to set the `pre` value of the record to `long long`.
+
+## `617. Merge Two Binary Trees`
+```cpp
+TreeNode* mergeTrees(TreeNode* t1, TreeNode* t2) {
+    if(!t1) return t2;
+    if(!t2) return t1;
+    t1->val += t2->val;
+    t1->left = mergeTrees(t1->left,t2->left);
+    t1->right = mergeTrees(t1->right,t2->right);
+    return t1;
+}
+```
+看别人写的就很精简。It is very simple to read what others have written.
+
 
 # Two pointers
 
