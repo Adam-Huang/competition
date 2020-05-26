@@ -167,17 +167,79 @@ int findPeakElement(vector<int>& nums) {
     }
 ```
 这种解法，还有其他题目的一些精简解法，本质思想是一样的。This solution, as well as some simplified solutions to other topics, the essential idea is the same.
-二分查找，不是左边就是右边。如果能在一个特定的条件下，确实是左边。那超出这个条件就是右边。（这话说着我有点心虚呀- -!）Binary search, either left or right.If it can be under a specific condition, it is indeed the left.That exceeds this condition is the right.(This is saying with a guilty conscience--!)
+二分查找，不是左边就是右边。如果能在一个特定的条件下，确实是左边。那超出这个条件就是右边。（这话说着我有点心虚呀- -!）Binary search, either left or right.If it can be under a specific condition, it is indeed the left.That exceeds this condition is the right.(This is saying with a guilty conscience!- -!)
 
+## [`33. Search in Rotated Sorted Array`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+旋转了一次的数组中查找，关键是找好度量指标，不然代码写的会很复杂。
+正确的判断条件是：
+1. `mid`值的左边或右边哪一个是单调的？`if(nums[m] >= nums[s])`则`[s,m]`单调，否则`[m,e]`单调
+2. 判断`mid`是否在单调的一端，不在，则在另一端。
+```cpp
+int search(vector<int>& nums, int target){
+	int s = 0, e = nums.size() - 1, m = 0;
+	while(s <= e){
+		m = (s + e) / 2;
+		if(nums[m] == target) return m;
+		if(nums[m] >= nums[s]){// s - m -> rised 
+		// err 1: there is a =, why need a =?
+			if(nums[s] <= target && nums[m] > target){
+				e = m;
+			}
+			else s = m + 1;
+		}
+		else{//m - e must rised
+			if(nums[m] < target && nums[e] >= target){// err 2: not add a =
+				s = m + 1;
+			}
+			else e = m;
+		}
+	}
+	return -1;
+}
+```
+**下面是代码中细节的考量**
+- 细节分析，为什么需要额外判断`target < nums[mid]`？为防止单调数组，即未旋转或以`0`旋转的。
+```
+ 0 1 2 3 4
+[1,3]   target = 3 without `target < nums[mid]`
+sm e
+[1,3,5] target = 5
+ s m e
+ | |
+ s < target But the target in the right.
+```
+- 细节分析，为什么`if(nums[m] >= nums[s])`中`nums[m] == nums[s]`要归为一类？其一，因为是单调无重复的数组，`nums[m] == nums[s]`只有一种情况，就是`m == s`了，其二，要清楚经过此条件判断的作用是什么，是为了划分出来一个确定的单调数组，但此时`nums[e]`不知道是大于还是小于`nums[m]`所以把他划分到左边是比较明智的选择。
+```
+[3,1] target = 1
+sm e
+```
+- 更新左区间选择`e = m;`也是可以的。
+- 为什么`e`初始化为`e = nums.size() - 1`，并判断`while(s <= e)`？这两点是绑定的，因为`e`被初始化如上，所以`while`中需要加上`=`，因为下标的取值范围是`[0,n - 1]`所以，要么`e = nums.size()`配上`while(s < e)`，要么如上。但为什么一定要初始化为`e = nums.size() - 1`呢，因为`nums[e]`将会作为一个标准在循环中被用到。
+
+
+
+# Design
+## `146. LRU(Least Recently Used) Cache`
+**错了几次，过一段时间再写写看。**
 
 # Dynamic Programming
+[1. Reference Classification](https://zhuanlan.zhihu.com/p/126546914)
+
 ## `53. Maximum Subarray`
 连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
-
 ## `221. Maximal Square`
 这道题就比较容易看出来是动态规划。而且递推方程也好写。This question is easier to see as dynamic programming.And recursive equations are also easy to write.
+## Array
+### [`1458. Max Dot Product of Two Subsequences`](https://leetcode-cn.com/problems/max-dot-product-of-two-subsequences/)
+
+## knapsack
+### [`1449. Form Largest Integer With Digits That Add up to Target`](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
+这个题本身不难，是明显的`完全背包`问题，但是边界条件怎么选是重点：This question is not difficult in itself, it is obviously a `complete knapsack` problem, but how to choose the boundary conditions is the key:
+1. 什么都不给，需要凑出一系列`target`是不可能的。Nothing is given, it is impossible to make a series of `target`. 
+2. 给了一堆数，凑出是`target = 0`是空。Gave a bunch of numbers, and it came out that `target = 0` is empty.
+
 
 ## Stock related 
 [Good reference](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/solution/yi-ge-fang-fa-tuan-mie-6-dao-gu-piao-wen-ti-by-l-3/)
@@ -247,7 +309,21 @@ I sloved it again [*6 May 2020*] with an error:
 [`2. Add Two Numbers`](https://leetcode-cn.com/problems/add-two-numbers/)  You can read more details
 [`88. Merge Sorted Array` ](https://leetcode-cn.com/problems/merge-sorted-array/)
 
+## Ring
+[`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/) & 
+抽象一层来分析这个题目，如何想到是快慢指针，如何与环联系思考？
+首先限定时间复杂度`O(n^2)`以下，要么`O(nlogn)`，要么是`O(n)`；
+数字值域为`[1,n]`，重复次数不定。展开看确实像一个链表，如下图`s`指示：
+```
+ 0 1 2 3 4
+[3,1,3,4,2]
 
+s 0|3 -> 3|4 -> 4|2 -> 2|3 -> 3|4 -> 4|2 -> 
+ - - - - - - - - - - - - - - - - - - - - - - - - -
+f 0|3 -> 4|2 -> 3|4 -> 2|3 -> 4|2 -> 3|4 ->
+
+          |   <--  cycle  -->  | So There is no way to break the loop of while(s == f || nums[s] != nums[f]);
+```
 
 # Pattern matching
 ## `28. Implement strStr()`
@@ -290,10 +366,12 @@ max  7 7 6 6
      |-> exchange 1 and idx 0
 maid 1 1 3 3
 ```
+
 # Sliding Windows
 ## `209. Minimum Size Subarray Sum`
 这个题限定了是正整数，目标和**范围**，求最小连续子数组。已经很明显是滑动窗口了。This question is limited to positive integers, range of target sums, and finding the minimal length of continuous sub-array.It is clearly a sliding window.
 
+# Sort
 
 # Stack
 ## `20. Valid Parentheses`
@@ -301,6 +379,15 @@ maid 1 1 3 3
 Even if it is not elegant, the last time I was pitted by an empty string, this time I was stumped by `"["`.
 `Error 3` 用栈可以很优雅。Using the stack can be very elegant.但是也被坑了一次But also got pitted once `"]"` Be careful when pop from a stack!!
 
+
+# String
+[`151. Reverse Words in a String`](https://leetcode-cn.com/problems/reverse-words-in-a-string/)
+这个流的运用还蛮有用的，细节可参考[stringstream的用法](https://zhuanlan.zhihu.com/p/44435521)：
+```
+        istringstream ss(s);
+        string w;
+        while(ss >> w){ }
+```
 
 # Tree
 ## `235. Lowest Common Ancestor of a Binary Search Tree`
