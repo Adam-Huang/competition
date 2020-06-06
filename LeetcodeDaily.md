@@ -1,4 +1,7 @@
 **时间顺序排列（Chronological order）**
+[*3 June 2020*]
+## [`73. 矩阵置零`](https://leetcode-cn.com/problems/set-matrix-zeroes/)
+矩阵置位题，比较好的方法是利用第`0`行第`0`列作为一个存放标签的地方，后续对于第`0`行第`0`列在特殊考虑。
 
 [*19 May 2020*]
 ## `680. Valid Palindrome II`
