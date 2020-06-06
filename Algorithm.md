@@ -6,6 +6,11 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 ## Trapping Rain Water
 - [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。It is related to rainwater, because it is the amount of rainwater determined by the short side, so you only need to move the short side each time.
 
+## 寻找重复或消失
+此类问题有一个最典型的特点就是数组中数字范围为：`[1,n]`其中`n`是数组长度：
+[`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/)：这个有点类似链表找环的入口点。
+[`448. Find All Numbers Disappeared in an Array`](https://leetcode-cn.com/problems/find-all-numbers-disappeared-in-an-array/)：这个题消失的数字不止一个，但是允许你对原数组进行修改
+[`41. First Missing Positive`](https://leetcode-cn.com/problems/first-missing-positive/)：这个隐含了`answer`范围在[1,n + 1]之中。
 
 
 # Back Tracking
@@ -136,6 +141,10 @@ if two == 1: # if two is 0;
 I. 统计各数字在`bit`位上出现的次数，这个思路要有。Count the number of times each number appears on the bit, this idea must have.
 II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how to use the 32-bit own rule record
 
+# Binary
+[`1461. 检查一个字符串是否包含所有长度为 K 的二进制子串`](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/)
+这题一开始也不会做，没有理解二进制的特点呀！！
+- [哈希表中存字符串，时间复杂度不是 O(n)，真正的 O(n) 解在这里。](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/solution/ha-xi-biao-zhong-cun-zi-fu-chuan-shi-jian-fu-za-du/)这个题解写的真好。
 
 # Binary serach
 ## `14. Longest Common Prefix`
@@ -169,7 +178,7 @@ int findPeakElement(vector<int>& nums) {
 这种解法，还有其他题目的一些精简解法，本质思想是一样的。This solution, as well as some simplified solutions to other topics, the essential idea is the same.
 二分查找，不是左边就是右边。如果能在一个特定的条件下，确实是左边。那超出这个条件就是右边。（这话说着我有点心虚呀- -!）Binary search, either left or right.If it can be under a specific condition, it is indeed the left.That exceeds this condition is the right.(This is saying with a guilty conscience!- -!)
 
-## [`33. Search in Rotated Sorted Array`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+## [`33. Search in Rotated Sorted Array`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/) & [`81. Search in Rotated Sorted Array II`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/)
 旋转了一次的数组中查找，关键是找好度量指标，不然代码写的会很复杂。
 正确的判断条件是：
 1. `mid`值的左边或右边哪一个是单调的？`if(nums[m] >= nums[s])`则`[s,m]`单调，否则`[m,e]`单调
@@ -216,11 +225,46 @@ sm e
 - 更新左区间选择`e = m;`也是可以的。
 - 为什么`e`初始化为`e = nums.size() - 1`，并判断`while(s <= e)`？这两点是绑定的，因为`e`被初始化如上，所以`while`中需要加上`=`，因为下标的取值范围是`[0,n - 1]`所以，要么`e = nums.size()`配上`while(s < e)`，要么如上。但为什么一定要初始化为`e = nums.size() - 1`呢，因为`nums[e]`将会作为一个标准在循环中被用到。
 
+[`81. Search in Rotated Sorted Array II`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/)
+
+As same as [33. Search in Rotated Sorted Array](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+
+[**There is a good solution  Reference**](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/solution/zai-javazhong-ji-bai-liao-100de-yong-hu-by-reedfan/)
+
+Error 1:可以看出来，这个`if(nums[m] < target && nums[m] < nums[e])`不足以判断，目标在`m`的左边还是右边。还是要换成`if(nums[m] < target && target < nums[e])`
+```
+   0    1     2
+   5    1     3   target = 5
+   s    m     e
+```
+Error 2: 基于error1: `if(nums[m] < target && target < nums[e])`之后因为要`s = m + 1`或者`e = m`,因此，若`nums[e] == target`就会错失正确答案。要断定`target`等于边界值时的区域归属。
+
+Error2:
+```
+   0    1     2
+   5    1     3   target = 3
+   s    m     e
+```
+
+## [`74. Search a 2D Matrix`](https://leetcode-cn.com/problems/search-a-2d-matrix/)
+常规的二分查找题，注意题目是问有没有值在矩阵其中，如果`int s = 0, e = r * c`并且`while(s < e)`可能最后会超出边界，即退出的时候是`s = r * c`，因为最后需要考虑`nums[s] == target`，此时就有可能报错。应加判断`return s != r * c && matrix[x][y] == target;`
+**或者：**
+初始化为：`int s = 0, e = r * c - 1`，判别为：`while(s <= e)`，但是要注意，更新右值时使用：`e = m - 1;`否则：`[[1,1]] target = 0` endless Loop.
+
+
 
 
 # Design
 ## `146. LRU(Least Recently Used) Cache`
 **错了几次，过一段时间再写写看。**
+
+# Double pointers
+## fast & slow
+[`80. 删除排序数组中的重复项 II`](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array-ii/)
+
+
+## [`355. Design Twitter`](https://leetcode-cn.com/problems/design-twitter/)
+
 
 # Dynamic Programming
 [1. Reference Classification](https://zhuanlan.zhihu.com/p/126546914)
@@ -273,6 +317,50 @@ int maxProfit(vector<int>& prices) {
         return dp_i_0;
     }
 ```
+
+## 掷骰子
+
+[`837. 新21点`](https://leetcode-cn.com/problems/new-21-game/)虽然不是掷骰子，但是很想，得分是`1~W`求得分在大于等于`K`时小于`N`的概率。时间复杂度要求较高，关键还是能准确的推出递推公式。可以用类似前缀和的思想优化之。
+ - [反推的代表，官方题解](https://leetcode-cn.com/problems/new-21-game/solution/xin-21dian-by-leetcode-solution/)
+ - 正推的代表在官解的评论中，如下：
+```cpp
+// dp[i] = sum { dp[i - {min(W, 1), 1}] * (1 / W) }
+// 1 --> dp[1] = dp[0] *=  1 / W 
+// 2 --> dp[2] = (dp[0]  + dp[1]) / W
+// 3 --> dp[3] = (dp[0] + dp[1] + .. ) / W
+// dp[i] = prefix[min(i - 1, K) ,max(i - K, 0)] 前缀和优化
+
+using db = double;
+const int N = 2e5 + 5;
+db dp[N], prefix[N];
+
+class Solution {
+public:
+    double new21Game(int N, int K, int W) {
+        db ans = 0.0;
+        if (K == 0) return 1.0;
+        memset(dp, 0, sizeof(dp));
+        memset(prefix, 0, sizeof(prefix));
+
+        dp[0] = prefix[0] = 1;
+
+        for (int i = 1; i <= K + W; ++ i){
+            dp[i] = db(1.0 / W) * (prefix[min(i - 1, K - 1)] - (i - W <= 0 ? 0 : prefix[i - W - 1]));
+            prefix[i] = (dp[i] + prefix[i - 1]);
+        }
+        ans = prefix[min(N, K + W - 1)] - prefix[K - 1];
+
+        return ans;
+    }
+};
+```
+
+
+# Graph
+[`1462. 课程安排 IV`](https://leetcode-cn.com/problems/course-schedule-iv/)
+这题用的数据结构算是邻接矩阵吧，一开始我用的是邻接表，显然很蠢。
+- [并查集思想 双百](https://leetcode-cn.com/problems/course-schedule-iv/solution/bing-cha-ji-si-xiang-shuang-bai-by-tiooo/)这个并查集很牛逼，很牛逼。
+- [Floyd也可以，但是效率稍弱一点](https://leetcode-cn.com/problems/course-schedule-iv/solution/floyd-by-over-lord/)
 
 # Greedy
 以跳跃游戏为例，是贪心算法。如何从题目中分离出是贪心算法才是关键。Take the jump game as an example, it is a greedy algorithm.How to separate from the problem is the greedy algorithm is the key. 此外还有一些细节需要考虑：There are also some details to consider:
@@ -455,6 +543,31 @@ TreeNode* mergeTrees(TreeNode* t1, TreeNode* t2) {
 ```
 看别人写的就很精简。It is very simple to read what others have written.
 
-
+## 二叉树的遍历
+[迭代方法](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/mo-fang-di-gui-zhi-bian-yi-xing-by-sonp/)
+```cpp
+class Solution {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        vector<int> res;
+        stack<TreeNode*> call;
+        if(root!=nullptr) call.push(root);
+        while(!call.empty()){
+            TreeNode *t = call.top();
+            call.pop();
+            if(t!=nullptr){
+                call.push(t);  //在右节点之前重新插入该节点，以便在最后处理（访问值）
+                call.push(nullptr); //nullptr跟随t插入，标识已经访问过，还没有被处理
+                if(t->right) call.push(t->right);
+                if(t->left) call.push(t->left);
+            }else{
+                res.push_back(call.top()->val);
+                call.pop();
+            }
+        }
+        return res;   
+    }
+};
+```
 # Two pointers
 
