@@ -1,9 +1,10 @@
 **时间顺序排列（Chronological order）**
 [*3 June 2020*]
-## [`73. 矩阵置零`](https://leetcode-cn.com/problems/set-matrix-zeroes/)
+## [73. 矩阵置零](https://leetcode-cn.com/problems/set-matrix-zeroes/)
 矩阵置位题，比较好的方法是利用第`0`行第`0`列作为一个存放标签的地方，后续对于第`0`行第`0`列在特殊考虑。
 
 [*19 May 2020*]
+
 ## `680. Valid Palindrome II`
 我用的双指针，因为最多删除一个，就是左指针left和右指针right有一个跳了一次，即`++left`或者`--right`；I used the double pointer, because at most one is deleted, that is, the `left` pointer left and the `right` pointer have one jump, that is, `++ left` or` --right`;
 也就是最多三种情况，两次`O(n)`的循环。That is, at most three cases, two `O (n)` cycles.
@@ -49,7 +50,7 @@ Using vector construct function:`ans = vector<int>(nums.begin() + i - 1,nums.end
 
 **others**
 1. This is a elegant one:
-```
+```c++
 string longestDiverseString(int a, int b, int c) {
         vector<vector<char>> v;
         v.push_back({(char)a, 'a'});
@@ -86,7 +87,7 @@ Greedy Algorithm.
 Although the certification is not clear.
 
 ## `1415. The k-th Lexicographical String of All Happy Strings of Length n`
-```
+```shell
                                                  n = 3, k = 7
 1         a      |      b      |     c           k - 1 / 4 == 1  k - 1 % 4 = 2
 2     b      c   |   a     c   |  a     b        k / 2     == 1  k % 2 = 0
@@ -132,7 +133,7 @@ Woc. 我之前想到了，现在居然想不到了。我都觉得之前的方法
 这题感觉挺简单的，但是递归的方法我没写出来。This question feels quite simple, but I can not write a recursive method.
 通过分析还是能明显看出递归规律的，问题是怎么就知道是从左往右推呢？Through the analysis, we can still clearly see the recursive law. The Question is How do we know that it is pushed from left to right?
 `dp[i] = sum(dp[0 ~ i - 1]) + 1`
-```
+```shell
 1     |[1]
 13    |[1,3]    [13]
 131   |[1,3,1]  [13,1]   [1,31]  [131]

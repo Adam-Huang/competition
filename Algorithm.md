@@ -2,8 +2,17 @@
 旨在通过归纳总结做过的习题以及遇到的问题，抽象提炼以完善自身思维和代码能力。
 It aims at summarizing the exercises and problems encountered, and abstracting them to improve my thoughts and coding skills.
 
-# array
-## Trapping Rain Water
+# Array
+
+## Analysis
+
+有些题目需要先分析一波，从细节出发：
+
+[`1014. Best Sightseeing Pair`](https://leetcode-cn.com/problems/best-sightseeing-pair/) 
+
+这个感觉真是不容易想到，从表达式出发`A[i] + A[j] + i - j`看成`A[i] + i`和`A[j] - j`的和，维护一个其中的最大值即可。说难吧，也不难，但是为啥就是想不到呢？
+
+## Trapping rain water
 - [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。It is related to rainwater, because it is the amount of rainwater determined by the short side, so you only need to move the short side each time.
 
 ## 寻找重复或消失
@@ -11,6 +20,42 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 [`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/)：这个有点类似链表找环的入口点。
 [`448. Find All Numbers Disappeared in an Array`](https://leetcode-cn.com/problems/find-all-numbers-disappeared-in-an-array/)：这个题消失的数字不止一个，但是允许你对原数组进行修改
 [`41. First Missing Positive`](https://leetcode-cn.com/problems/first-missing-positive/)：这个隐含了`answer`范围在[1,n + 1]之中。
+
+## Remove duplicate
+
+在回溯算法哪里也有部分去重的任务，主要是生成排列组合数组。这里主要针对的是几数之和的相关题目。
+
+### [15. 3Sum](https://leetcode-cn.com/problems/3sum/) & [18. 4Sum](https://leetcode-cn.com/problems/4sum/)
+
+三数之和，主要是细节去重：
+
+```c++
+vector<vector<int>> threeSum(vector<int>& nums) {
+        vector<vector<int>> ans;
+        sort(nums.begin(),nums.end());
+        int n = nums.size();
+        for(int i = 0; i < n; ++i){
+            while(i > 0 && i < n && nums[i] == nums[i - 1]) ++i; /*若相同则过滤*/
+            int s = i + 1, e = n - 1;
+            while(s < e){
+                int now = nums[i] + nums[s] + nums[e];
+                if(now > 0) --e;
+                else if(now < 0) ++s;
+                else ans.push_back({nums[i],nums[s++],nums[e--]});
+
+                while(s > i + 1 && s < e && nums[s] == nums[s - 1]) ++s;
+                while(s < e && e < n - 1 && nums[e] == nums[e + 1]) --e;
+                /*关键：
+                1. 要在使用过s和e之后考虑去重；
+                2. 要考虑这次的s或e是否与最近一次使用的相同，相同则过滤；
+                3. 因为是向后比较（s & s - 1）（e & e + 1）因此退出条件是s < e*/
+            }
+        }
+        return ans;
+    }
+```
+
+按照上述逻辑，其实4数之和也是一样的。
 
 
 # Back Tracking
@@ -22,6 +67,7 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 此题重点在去重复项。This question focuses on removing duplicates.
 去重的题目有几个，方法也有不少，这里总结这个：There are several topics for deduplication, and there are many methods. Here is a summary:
 Key code: `if(i > 0 && nums[i] == nums[i - 1] && L[i - 1]) continue;` or `if(i > 0 && nums[i] == nums[i - 1] && !L[i - 1]) continue;`
+
 ```
                   [1,1,2]
          |           |-> be cut off if !L[i - 1] and safe with L[i - 1]
@@ -55,7 +101,8 @@ FOR EXAMPLE:
 ### `77. Combinations`
 这是一个常规组合问题。This is a conventional combination problem.画出递归树后很容易发现，要想去重只要设置每次只放置比前一个值大的值即可。After drawing the recursive tree, it is easy to find that if you want to deduplicate, you only need to set a value greater than the previous one each time.
 `if(now.empty() || now.back() < i)`
-```
+
+```shell
 n = 4, k = 2
      1       2       3        4
    / | \   / | \   / | \    / | \
@@ -63,7 +110,7 @@ n = 4, k = 2
 ```
 ### `39. Combination Sum`
 求组合和等于`target`的所有情况。Find all cases where the combined sum is equal to target. I draw the recursive tree again.
-```
+```shell
 [2,3,6,7] target = 7
        2       C  3         6         7
 	/ | | \    / | | \   / | | \   / | | \
@@ -93,10 +140,24 @@ It have same target as `39`, But each number in the `candidates` may only be use
 现在用的是：
 1. 承接上一题思路，排序之后`i`元素查找范围限定在`[i + 1, n)`；Following the ideas of the previous question, the search range of the `i` element after sorting is limited to `[i + 1, n)`
 2. 遇到重复项，只有在第一次使用重复项时后面的重复项才会被使用。Encountered duplicate items, only the next duplicate items will be used when the duplicate items are used for the first time. 还是这句话：Still this sentence: 
-`if(i > 0 && nums[i] == nums[i - 1] && !L[i - 1]) continue;`
-换而言之，如果前面的`ele[i]`没被用过，那么和`ele[i]`值相等的`ele[i + 1]`也不使用。In other words, if the previous `ele [i]` has not been used, then `ele [i + 1]` with the same value as `ele [i]` will not be used.
+    `if(i > 0 && nums[i] == nums[i - 1] && !L[i - 1]) continue;`
+    换而言之，如果前面的`ele[i]`没被用过，那么和`ele[i]`值相等的`ele[i + 1]`也不使用。In other words, if the previous `ele [i]` has not been used, then `ele [i + 1]` with the same value as `ele [i]` will not be used.
 
-# bit manipulation
+## `Find the Kth permutations`
+
+[`1415. The k-th Lexicographical String of All Happy Strings of Length n`](https://leetcode-cn.com/problems/the-k-th-lexicographical-string-of-all-happy-strings-of-length-n/)
+
+```shell
+                                                 n = 3, k = 7
+1         a      |      b      |     c           k - 1 / 4 == 1  k - 1 % 4 = 2
+2     b      c   |   c     a   |  a     b        k / 2     == 1  k % 2 = 0
+3   a   c  a   b | a   b  b  c |b   c a   c      k / 1     == 0  so it is bab
+```
+
+这个还有一个第k个排列的，这样的题目就是要先画出递归树，然后找到规律，基本上都是取余和取商的过程。	不过这一题我转移矩阵用的真是太帅了。
+
+
+# Bit manipulation
 ## `137. Single Number II`
 Have I sloved the problem? Yes , at: 5 mothes ago [*2020 28 April*]
 
@@ -128,7 +189,7 @@ This is really good, from a state machine perspective,
 - Focus on observing the number of occurrences of `1` in a certain bit，Because at most 3 times (3 times will be cleared), So there are 3 states, 00, 01, 10; 
 - Two variables are needed to maintain this state transition process.
 
-```python3
+```python
 if two == 0: # if two 0; it mean the bit 1 appear 1 or 2 times
   if n == 0: # the number is 0 in this bit, the state maintaining.
     one = one
@@ -178,9 +239,10 @@ int findPeakElement(vector<int>& nums) {
 这种解法，还有其他题目的一些精简解法，本质思想是一样的。This solution, as well as some simplified solutions to other topics, the essential idea is the same.
 二分查找，不是左边就是右边。如果能在一个特定的条件下，确实是左边。那超出这个条件就是右边。（这话说着我有点心虚呀- -!）Binary search, either left or right.If it can be under a specific condition, it is indeed the left.That exceeds this condition is the right.(This is saying with a guilty conscience!- -!)
 
-## [`33. Search in Rotated Sorted Array`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/) & [`81. Search in Rotated Sorted Array II`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/)
+## [33. Search in Rotated Sorted Array](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/) & [81. Search in Rotated Sorted Array II](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/)
 旋转了一次的数组中查找，关键是找好度量指标，不然代码写的会很复杂。
 正确的判断条件是：
+
 1. `mid`值的左边或右边哪一个是单调的？`if(nums[m] >= nums[s])`则`[s,m]`单调，否则`[m,e]`单调
 2. 判断`mid`是否在单调的一端，不在，则在另一端。
 ```cpp
@@ -225,9 +287,7 @@ sm e
 - 更新左区间选择`e = m;`也是可以的。
 - 为什么`e`初始化为`e = nums.size() - 1`，并判断`while(s <= e)`？这两点是绑定的，因为`e`被初始化如上，所以`while`中需要加上`=`，因为下标的取值范围是`[0,n - 1]`所以，要么`e = nums.size()`配上`while(s < e)`，要么如上。但为什么一定要初始化为`e = nums.size() - 1`呢，因为`nums[e]`将会作为一个标准在循环中被用到。
 
-[`81. Search in Rotated Sorted Array II`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/)
-
-As same as [33. Search in Rotated Sorted Array](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+[`81. Search in Rotated Sorted Array II`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/) As same as [`33. Search in Rotated Sorted Array`](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
 
 [**There is a good solution  Reference**](https://leetcode-cn.com/problems/search-in-rotated-sorted-array-ii/solution/zai-javazhong-ji-bai-liao-100de-yong-hu-by-reedfan/)
 
@@ -246,7 +306,7 @@ Error2:
    s    m     e
 ```
 
-## [`74. Search a 2D Matrix`](https://leetcode-cn.com/problems/search-a-2d-matrix/)
+## [74. Search a 2D Matrix](https://leetcode-cn.com/problems/search-a-2d-matrix/)
 常规的二分查找题，注意题目是问有没有值在矩阵其中，如果`int s = 0, e = r * c`并且`while(s < e)`可能最后会超出边界，即退出的时候是`s = r * c`，因为最后需要考虑`nums[s] == target`，此时就有可能报错。应加判断`return s != r * c && matrix[x][y] == target;`
 **或者：**
 初始化为：`int s = 0, e = r * c - 1`，判别为：`while(s <= e)`，但是要注意，更新右值时使用：`e = m - 1;`否则：`[[1,1]] target = 0` endless Loop.
@@ -263,7 +323,7 @@ Error2:
 [`80. 删除排序数组中的重复项 II`](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array-ii/)
 
 
-## [`355. Design Twitter`](https://leetcode-cn.com/problems/design-twitter/)
+## [355. Design Twitter](https://leetcode-cn.com/problems/design-twitter/)
 
 
 # Dynamic Programming
@@ -273,13 +333,14 @@ Error2:
 连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
+
 ## `221. Maximal Square`
 这道题就比较容易看出来是动态规划。而且递推方程也好写。This question is easier to see as dynamic programming.And recursive equations are also easy to write.
 ## Array
-### [`1458. Max Dot Product of Two Subsequences`](https://leetcode-cn.com/problems/max-dot-product-of-two-subsequences/)
+### [1458. Max Dot Product of Two Subsequences](https://leetcode-cn.com/problems/max-dot-product-of-two-subsequences/)
 
 ## knapsack
-### [`1449. Form Largest Integer With Digits That Add up to Target`](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
+### [1449. Form Largest Integer With Digits That Add up to Target](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
 这个题本身不难，是明显的`完全背包`问题，但是边界条件怎么选是重点：This question is not difficult in itself, it is obviously a `complete knapsack` problem, but how to choose the boundary conditions is the key:
 1. 什么都不给，需要凑出一系列`target`是不可能的。Nothing is given, it is impossible to make a series of `target`. 
 2. 给了一堆数，凑出是`target = 0`是空。Gave a bunch of numbers, and it came out that `target = 0` is empty.
@@ -359,6 +420,7 @@ public:
 # Graph
 [`1462. 课程安排 IV`](https://leetcode-cn.com/problems/course-schedule-iv/)
 这题用的数据结构算是邻接矩阵吧，一开始我用的是邻接表，显然很蠢。
+
 - [并查集思想 双百](https://leetcode-cn.com/problems/course-schedule-iv/solution/bing-cha-ji-si-xiang-shuang-bai-by-tiooo/)这个并查集很牛逼，很牛逼。
 - [Floyd也可以，但是效率稍弱一点](https://leetcode-cn.com/problems/course-schedule-iv/solution/floyd-by-over-lord/)
 
@@ -367,8 +429,8 @@ public:
 1. 跳（动作）、在一个范围内搜索、选择下一次跳跃点（同时也会确定下一次搜索范围）是三个分开的过程。Jumping (the action), searching within a range, and selecting the next jump point (also determining the next search range) are three separate processes. 保险起见，一开始可以申请尽可能多的变量，以免死循环。For insurance purposes, you can apply for as many variables as possible to avoid endless loops.
 
 
-# hash
-## `two sum`
+# Hash
+## `1. two sum`
 [*13 May 2020*]
 这是一个基础题，但是解题思想很常用。This is a basic question, but the idea of solving the problem is very common
 1. 通过排序`O(N logN)` 降低时间复杂度。Reduce time complexity by sorting with `O (N logN)`.
@@ -402,7 +464,8 @@ I sloved it again [*6 May 2020*] with an error:
 抽象一层来分析这个题目，如何想到是快慢指针，如何与环联系思考？
 首先限定时间复杂度`O(n^2)`以下，要么`O(nlogn)`，要么是`O(n)`；
 数字值域为`[1,n]`，重复次数不定。展开看确实像一个链表，如下图`s`指示：
-```
+
+```shell
  0 1 2 3 4
 [3,1,3,4,2]
 
@@ -413,7 +476,65 @@ f 0|3 -> 4|2 -> 3|4 -> 2|3 -> 4|2 -> 3|4 ->
           |   <--  cycle  -->  | So There is no way to break the loop of while(s == f || nums[s] != nums[f]);
 ```
 
+## Reverse
+
+[`206. Reverse Linked List`](https://leetcode-cn.com/problems/reverse-linked-list/)
+
+两种实现方法，主要关注迭代法。关键点：需要两个记录指针和一个临时指针。
+
+```c++
+ListNode* reverseList(ListNode* head) {
+        ListNode* pre = head; //指向当前处理指针的前一个指针
+        if(head){
+            ListNode* cur = head->next;//指向当前需要改变next指向的指针
+            while(cur){
+                ListNode* nt = cur->next;//临时指针，就是为了记录cur没改之前指向的指针
+                cur->next = pre;
+                pre = cur;
+                cur = nt;
+            }
+            head->next = nullptr;
+            head = pre;
+        }
+        return head;
+    }
+```
+
+[92. Reverse Linked List II](https://leetcode-cn.com/problems/reverse-linked-list-ii/)
+
+此题难度稍微提升了一点，就是只反转制定区间的link，相比之前的，需要记录的值多了**`1`个**。
+
+```c++
+ListNode* reverseBetween(ListNode* head, int m, int n) {
+        ListNode* dm = new ListNode(-1);
+        dm->next = head;
+        ListNode* dh = dm;//dh 指向反转区间[m,n]中m的前一个link
+        for(int i = 1; i < m; ++i) dh = dh->next;
+
+        ListNode* pre = dh->next, *cur = pre->next;//常规反转
+        for(int i = m; i < n; ++i){//不同点是反转结束的条件不再是cur == nullptr了
+            ListNode* nt = cur->next;
+            cur->next = pre;
+            pre = cur;
+            cur = nt;
+        }
+    /*无论反转了多少个最后退出时一定是这样的：
+    dm->1->2<-3<-4...<-i | i + 1-> i + 2->...
+        |              | 断  |
+       dh             pre   cur
+    */
+        dh->next->next = cur;//如上图需要让link(2)指向link(i + 1)
+        dh->next = pre; //link(1)指向link(i)
+        head = dm->next;
+        delete dm;dm = nullptr;
+        return head;
+    }
+```
+
+
+
 # Pattern matching
+
 ## `28. Implement strStr()`
 此题就是KMP算法的实现，关键是理解KMP的思想，可能会有变种，比如之前做过一个树形匹配。This question is the realization of KMP algorithm, the key is to understand the idea of KMP, there may be variants, such as doing a tree match before.
 [参考：KMP 算法详解](https://leetcode-cn.com/problems/implement-strstr/solution/kmp-suan-fa-xiang-jie-by-labuladong/)
@@ -424,6 +545,7 @@ KMP关键点是通过模式串的信息生成状态转换表，使得匹配串�
 顺时针旋转矩阵，我记得我是直接找下标的规律，但是找的时间比较久。如何快速解决这些题目？Rotating the matrix clockwise, I remember I was looking directly for the rule of index, but it took longer to find.How to solve these problems quickly?
 方案1 通过转置矩阵 Use Transpose matrix
 可以看到，转置之后行反转和列反转就能分别得到逆时针和顺时针的结果。It can be seen that after the transposition, the row inversion and column inversion can obtain the results of counterclockwise and clockwise, respectively.
+
 ```
 a =                       | a.T                      |Counterclockwise rot90(a,1)|
 array([[ 0,  1,  2,  3],  |array([[ 0,  4,  8, 12],  |array([[ 3,  7, 11, 15],   |
@@ -471,6 +593,7 @@ Even if it is not elegant, the last time I was pitted by an empty string, this t
 # String
 [`151. Reverse Words in a String`](https://leetcode-cn.com/problems/reverse-words-in-a-string/)
 这个流的运用还蛮有用的，细节可参考[stringstream的用法](https://zhuanlan.zhihu.com/p/44435521)：
+
 ```
         istringstream ss(s);
         string w;
@@ -481,6 +604,7 @@ Even if it is not elegant, the last time I was pitted by an empty string, this t
 ## `235. Lowest Common Ancestor of a Binary Search Tree`
 二叉搜索树的LCA，第一次将两个数值分开的节点就是了。For the LCA of the binary search tree, the first time is to separate the two values. 考虑到边界，其实就是只要不是同时严格大于或者严格小于的节点。Considering the boundary, in fact, as long as it is not a node that is strictly greater than or strictly less than is the LCA.
 以下，非递归，我觉得写的挺好的：The following, non-recursive, I think it is written very well
+
 ```cpp
 TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
         if (root == nullptr || p == nullptr || q == nullptr) return nullptr;
@@ -503,6 +627,7 @@ TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
 
 **others**
 参考图解[Reference illustration](https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/solution/236-er-cha-shu-de-zui-jin-gong-gong-zu-xian-hou-xu/)
+
 ```cpp
 class Solution {
 public:
@@ -569,5 +694,17 @@ public:
     }
 };
 ```
+## 线段树
+
+[Vedio](<https://www.bilibili.com/video/BV1ep4y197JE>)
+
+# Trouble
+
+这里是一些暴力模拟的题目，虽说是暴力模拟，但是能有清晰的思路也很重要！
+
+[面试题 16.18. 模式匹配](https://leetcode-cn.com/problems/pattern-matching-lcci/)
+
+
+
 # Two pointers
 
