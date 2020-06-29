@@ -583,6 +583,21 @@ maid 1 1 3 3
 
 # Sort
 
+[324. 摆动排序 II](https://leetcode-cn.com/problems/wiggle-sort-ii/)看到**快速选择算法**，了解了一下，快速选择算法的时间复杂度近似为`O(n)`但最坏任然是`O(n^2)`，因此每次最好随机选取一个基准。
+
+`Time complexity`:
+
+```python
+# 第一次 数组长度n 全部跑一遍， 假设出现一般情况找到第k个位置，数组被分为了[0,k - 1],[k + 1,n - 1]
+# 第二次 假设目标在大的那边需要在跑一遍k长度的数组
+# ...
+# 因为一般情况都是折半的，因此cost是：n -> n/2 -> n/4 -> ... -> 2 -> 1 等差数列，但是可以看出，后一次结果不会大于第一次遍历长度(n/i > n/2i)因此，极限收敛至O(2n)。
+```
+
+## 3-ways-patition
+
+上面那题，还有一个荷兰国旗题都是关于这个`3-ways-patiton`算法的。
+
 # Stack
 ## `20. Valid Parentheses`
 `Error 2` 写得不优雅就算了，上次被空串坑，这次又被`"["` 难倒了。哎
@@ -594,13 +609,20 @@ Even if it is not elegant, the last time I was pitted by an empty string, this t
 [`151. Reverse Words in a String`](https://leetcode-cn.com/problems/reverse-words-in-a-string/)
 这个流的运用还蛮有用的，细节可参考[stringstream的用法](https://zhuanlan.zhihu.com/p/44435521)：
 
-```
-        istringstream ss(s);
-        string w;
-        while(ss >> w){ }
+```c++
+istringstream ss(s);
+string w;
+while(ss >> w){ }
 ```
 
+`String`头文件中还提供了多种`string to integer/folat/double/long`的接口函数：
+
+> [C++字符串转换（stoi；stol；stoul；stoll；stoull；stof；stod；stold）](<https://blog.csdn.net/baidu_34884208/article/details/88342844>) 支持各种进制的`string`转换成`int`
+>
+> `ul`: `unsigned long`
+
 # Tree
+
 ## `235. Lowest Common Ancestor of a Binary Search Tree`
 二叉搜索树的LCA，第一次将两个数值分开的节点就是了。For the LCA of the binary search tree, the first time is to separate the two values. 考虑到边界，其实就是只要不是同时严格大于或者严格小于的节点。Considering the boundary, in fact, as long as it is not a node that is strictly greater than or strictly less than is the LCA.
 以下，非递归，我觉得写的挺好的：The following, non-recursive, I think it is written very well

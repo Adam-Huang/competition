@@ -1,6 +1,7 @@
 - [linux C++后台开发面试题](<https://zhuanlan.zhihu.com/p/103027724>)
 - [知乎：程序员面试，面试官更注重代码量、项目经验还是操作系统、数据结构这种基础课程？两者比例是五五开还是多少？](https://www.zhihu.com/question/264198516)
 - [c/c++ (cn)](https://interview.huihut.com/#/) 这篇文章已经总结的相当全面了。This article has been summarized quite comprehensively.
+- [C/C++复习指北](<https://blog.csdn.net/qq_40840459/category_7280598.html>)
 
 
 
@@ -46,8 +47,6 @@
 >
 > 
 
-常量存储区是？
-
 
 
 ## 多态
@@ -72,17 +71,309 @@
 
   在有虚函数的类中，类的最开始部分是一个虚函数表的指针，这个指针指向一个虚函数表，表中放了虚函数的地址，实际的虚函数在代码段(.text)中。当子类继承了父类的时候也会继承其虚函数表，当子类重写父类中虚函数时候，会将其继承到的虚函数表中的地址替换为重新写的函数地址。使用了虚函数，会增加访问内存开销，降低效率。
 
+#### 虚表分布
+
+问的最多的就是虚表的布局，尤其是菱形继承(B 和 C 继承 A，D 继承 B 和 C)时每个对象的空间结构分布，比如问 D 有几份虚表，D 中 B 和 C 的成员空间排布
+
+```c++
+/*虚函数表相关*/
+class Base {
+public:
+	int num;
+	virtual void f() { std::cout << "base::f" << std::endl; }
+	virtual void g() { std::cout << "base::g" << std::endl; }
+	virtual void h() { std::cout << "base::h" << std::endl; }
+};
+
+class Base1
+{
+public:
+	virtual void o() { std::cout << "Base1::o()" << std::endl; };
+private:
+
+};
+
+class Derive : public Base {
+public:
+	int num;
+	void g() { std::cout << "derive::g" << std::endl; }
+};
+
+class Derive2 : public Base {
+public:
+	int num;
+	void h() { std::cout << "derive::h" << std::endl; }
+};
+
+class C :public Base, public Base1 {
+public:
+	void o(){ std::cout << "C::o()" << std::endl; }
+};
+
+int unittest_virtualtable()
+{
+	Base ba;
+	printf("sizeof Base:%llu  obj:%llu\n addest ba:0x%llX ,addest first member:0x%llX\n",sizeof(Base),sizeof(ba),&ba,&ba.num);
+	/*运行下发现：
+	1. ba.num的地址比ba高8；表明是虚函数表指针_vfptr的大小
+	2. sizeof(Base) == sizeof(ba) == 16，可见统计出来的数值是字节对齐后的值
+	0x00007ff78680cd58 {testFuc.exe!const Base::`vftable'} {
+		0x00007ff7867375f8 {testFuc.exe!Base::f(void)}, 
+		0x00007ff7867391c3 {testFuc.exe!Base::g(void)},
+		0x00007ff786736de7 {testFuc.exe!Base::h(void)}
+	} KEY1
+	*/
+	
+	TestStatic tb;
+	printf("sizeof Base:%llu  obj:%llu\n addest ba:0x%llX ,addest first member:0x%llX\n", sizeof(TestStatic), sizeof(tb), &tb, &tb.s_dwCount);
+	/*运行下可知：
+	1. 只有包含虚函数的类才会有虚函数表
+	2. sizeof(TestStatic), sizeof(tb), &tb, &tb.s_dwCount
+	*/
+
+	Base *bc = new Derive;
+	ba.g();
+	bc->g();
+	/*运行结果：调用的是子类的函数，因为虚函数表被覆盖了
+	0x00007ff78680ce00 {testFuc.exe!const Derive::`vftable'} {
+		0x00007ff7867375f8 {testFuc.exe!Base::f(void)}, 
+		0x00007ff78673785a {testFuc.exe!Derive::g(void)},
+		0x00007ff786736de7 {testFuc.exe!Base::h(void)}}
+	}
+	*/
+
+	Base *bd = new Base;
+	Derive de;
+	/*
+	小结：
+	1. 同一个类创建的对象，他们的虚函数表的地址是一样，当然虚函数的指针也是一样的；
+	2. 继承的类虚函数表的地址就不一样了，但表中存放的地址只有被覆盖的才不一样，不覆盖的还是一样的；
+	*/
+	Base1 bf;
+	C cg;
+	/*考察多继承的过程中的虚函数表指针的问题：KEY2
+	bf.__vfptr = 0x00007ff786825548 {testFuc.exe!const Base1::`vftable'} {
+		0x00007ff786735820 {testFuc.exe!Base1::o(void)}
+	}
+	
+	cg.__vfptr = 0x00007ff78680cef0 {testFuc.exe!const C::`vftable'{for `Base'}} {
+		0x00007ff7867375f8 {testFuc.exe!Base::f(void)}, ...
+	}
+	cg.__vfptr = 0x00007ff786825638 {testFuc.exe!const C::`vftable'{for `Base1'}} {
+		0x00007ff7867359e2 {testFuc.exe!C::o(void)}
+	}
+	小结：
+	1. 两个虚函数表是真的
+	2. 表指针的地址差的有点多 Base(8+8) +8+8+8(Base1)
+	*/
+	return 0;
+}
+```
+
+- `KEY1`：有虚函数就一定有虚函数表，表内存放的应该是函数地址，即使是继承的子类也会有新的表，当然了，如果子类没有重载的函数，表内地址还是原来函数的地址。
+- `KEY2`：此处可以解释菱形继承时的现象。首先如果哦继承子多个父类，就会有多个虚函数表，表的地址各不相同，但是，如果重载了哪个函数，那么对应表内的函数地址也就修改了。
+- `windows`平台的函数地址怎么这么高，还是都很高？用linux跑一下试试。
+
+**Linux**
+
+```c++
+#include <iostream>
+#include <stdio.h>
+
+using namespace std;
+ 
+class Base
+{
+public :
+    int base_data;
+    Base() { base_data = 1; }
+    virtual void func1() { cout << "base_func1" << endl; }
+    virtual void func2() { cout << "base_func2" << endl; }
+    virtual void func3() { cout << "base_func3" << endl; }
+};
+ 
+class Derive : public Base
+{
+public :
+    int derive_data;
+    Derive() { derive_data = 2; }
+    virtual void func1() { cout << "derive_func1" << endl; }
+    virtual void func2() { cout << "derive_func2" << endl; }
+};
+
+class Second : public Base
+{
+public :
+    int second_data;
+    Second() { second_data = 3; }
+    void func1() { cout << "second_func1" << endl; }
+    virtual void func2() { cout << "second_func2" << endl; }
+};
+
+class Son : public Second, public Derive
+{
+public :
+    int son_data;
+    Son() { son_data = 4; }
+    void func3() { cout << "son_func3" << endl; }
+    //virtual void func2() { cout << "son_func2" << endl; }
+};
+ 
+typedef void (*func)();
+ 
+int main()
+{
+    Base base;
+	printf("[__LINE__:%d] &base: 0x%llX\n",__LINE__,&base); // 0x7FFCF7922F70
+	printf("[__LINE__:%d] &base.base_data: 0x%llX\n",__LINE__,&base.base_data); // 0x7FFCF7922F78 
+    cout << "\n------------------base above----------------------\n" << endl;
+ 
+    Derive derive;
+	printf("[__LINE__:%d] &derive: 0x%llX\n",__LINE__,&derive); //0x7FFCF7922F80
+	printf("[__LINE__:%d] &derive.base_data: 0x%llX\n",__LINE__,&derive.base_data); // 0x7FFCF7922F88
+	printf("[__LINE__:%d] &derive.derive_data: 0x%llX\n",__LINE__,&derive.derive_data); // 0x7FFCF7922F8C KEY 1
+    cout << "\n------------------derive above----------------------\n" << endl;
+ 
+	Second second;
+	printf("[__LINE__:%d] &second: 0x%llX\n",__LINE__,&second); //0x7FFCF7922F90
+	printf("[__LINE__:%d] &second.base_data: 0x%llX\n",__LINE__,&second.base_data); //0x7FFCF7922F98
+	printf("[__LINE__:%d] &second.derive_data: 0x%llX\n",__LINE__,&second.second_data); //0x7FFCF7922F9C
+    cout << "\n------------------second above----------------------\n" << endl;
+ 
+	Son son;
+	printf("[__LINE__:%d] &son: 0x%llX\n",__LINE__,&son); //0x7FFCF7922FA0
+	printf("[__LINE__:%d] &son.second_data: 0x%llX\n",__LINE__,&son.second_data); //0x7FFCF7922FAC
+	printf("[__LINE__:%d] &son.Derive::base_data: 0x%llX\n",__LINE__,&son.Derive::base_data);//0x7FFCF7922FB8 | son.base_data error 1
+	printf("[__LINE__:%d] &son.derive_data: 0x%llX\n",__LINE__,&son.derive_data);//0x7FFCF7922FBC error 2
+	printf("[__LINE__:%d] &son.son_data: 0x%llX\n",__LINE__,&son.son_data); //0x7FFCF7922FC0 KEY 2
+    cout << "\n------------------son above----------------------\n" << endl;
+ 
+    for(int i=0; i<3; i++)
+    {
+        // &base : base首地址
+        // (unsigned long*)&base : base的首地址，vptr的地址
+        // (*(unsigned long*)&base) : vptr的内容，即vtable的地址，指向第一个虚函数的slot的地址
+        // (unsigned long*)(*(unsigned long*)&base) : vtable的地址，指向第一个虚函数的slot的地址
+        // vtbl : 指向虚函数slot的地址
+        // *vtbl : 虚函数的地址
+        unsigned long* vtbl = (unsigned long*)(*(unsigned long*)&base) + i;
+		printf("[__LINE__:%d] &vtbl: 0x%llX\n",__LINE__,&vtbl); // KEY 3
+		printf("[__LINE__:%d] *vtbl: 0x%llX\n",__LINE__,*vtbl); // 0x400FB0(base_func1) 0x400FDC(base_func2) 0x401008(base_func3) KEY4
+        func pfunc = (func)*(vtbl);
+        pfunc(); 
+    }
+    cout << "\n----------------------------------------\n" << endl;
+ 
+    for(int i=0; i<3; i++)
+    {
+        unsigned long* vtbl = (unsigned long*)(*(unsigned long*)&derive) + i;
+        printf("[__LINE__:%d] &vtbl: 0x%llX\n",__LINE__,&vtbl); // 
+		printf("[__LINE__:%d] *vtbl: 0x%llX\n",__LINE__,*vtbl); // 0x401066(derive_func1) 0x401092(derive_func2) 0x401008(base_func3) KEY4
+        func pfunc = (func)*(vtbl); //
+        pfunc(); //
+    }
+    cout << "\n----------------------------------------\n" << endl;
+	
+	for(int i=0; i<3; i++)
+    {
+        unsigned long* vtbl = (unsigned long*)(*(unsigned long*)&second) + i;
+        printf("[__LINE__:%d] &vtbl: 0x%llX\n",__LINE__,&vtbl); //
+		printf("[__LINE__:%d] *vtbl: 0x%llX\n",__LINE__,*vtbl); // 0x4010F0(second_func1) 0x40111C(second_func2) 0x401008(base_func3) KEY4
+        func pfunc = (func)*(vtbl); //
+        pfunc(); //
+    }
+    cout << "\n----------------------------------------\n" << endl;
+	
+	for(int i=0; i<3; i++)
+    {
+        unsigned long* vtbl = (unsigned long*)(*(unsigned long*)&son) + i;
+        printf("[__LINE__:%d] &vtbl: 0x%llX\n",__LINE__,&vtbl); //
+		printf("[__LINE__:%d] *vtbl: 0x%llX\n",__LINE__,*vtbl); // 0x4010F0(second_func1) 0x40111C(second_func2) 0x401198(son_func3) KEY5
+        func pfunc = (func)*(vtbl); //
+        pfunc(); //
+    }
+    cout << "\n----------------------------------------\n" << endl;
+    return 1;
+}
+```
+
+1. `error 1`: error: request for member ‘base_data’ is ambiguous 菱形继承时访问最基类的成员变量出现的。参考访问方法：[stack overflow](<https://stackoverflow.com/questions/1313063/request-for-member-is-ambiguous-in-g>)。菱形继承的其他说明可见[C++菱形继承问题和虚继承分析](<https://blog.csdn.net/c_base_jin/article/details/86036185>)。
+2. `error 2`: ‘int Derive::derive_data’ is inaccessible 继承多个的时候每个类名后面都要加`public`。
+
+- `Key 1`:继承之后的类虚表还是在最开始的位置，占`8 Bytes`，子类的数据结构在父类的后面，此处对齐了。目前的内存分布大概如下：
+
+  ```shell
+  +==============Base===============+ # 0x7FFCF7922F70
+  |           Base.__vrtpr          |
+  -----------------------------------
+  |Base.base_data |     空闲对齐     | # 0x7FFCF7922F78
+  +==============Derive=============+
+  |         Derive.__vrtpr          | # 0x7FFCF7922F80
+  -----------------------------------
+  |Base.base_data |Derive.derive_dat| # 0x7FFCF7922F88 0x7FFCF7922F8C
+  ```
+
+- `Key 2`: 从这个打印看，我猜他是有两个虚表的，而且应该是有两个`Base`类的空间，有两个`base_data`才会出现`error1`，我理解的内存分布如下：
+
+  ```shell
+  +==============Son================+ 
+  |         Second.__vrtpr          | # 0x7FFCF7922FA0
+  -----------------------------------
+  |Base.base_data |Second.second_dat| # 0x7FFCF7922FA8 0x7FFCF7922FAC
+  -----------------------------------
+  |         Derive.__vrtpr          | # 此处应该还有一个虚表，但是有两个base_data
+  -----------------------------------
+  |Base.base_data |Derive.derive_dat| # 0x7FFCF7922FB8 0x7FFCF7922FBC
+  -----------------------------------
+  |  Son.son_data |     空闲对齐     | # 0x7FFCF7922FC0
+  ```
+
+- `Key 3`: 这里打印的是临时变量`vtbl`在栈的地址，其实没多大意义。
+- `Key 4`: 首先父类是虚的，子类一定是虚的，加不加`virtual`都一样；其次，表的地址不一样但是未重载的函数地址是一样的，且函数地址空间很低（和windows下的不一样，可能是因为windows下给的进程内存不一样？）。
+- `Key 5`: 虽然打印来打是输出了`Second`类的函数和函数地址，但是不能保证所有的`Son::func1`都是这个输出，之所以这样输出函数因为`Son`首先继承了`Second`类，`Second`的虚表位置低。
 
 
 
+#### 虚函数与纯虚函数的区别
 
-
+> [虚函数与纯虚函数的区别](<https://blog.csdn.net/qq_40840459/article/details/82351726>)
+>
+> 
 
 ## 类 
 
+### 不能被继承
+
 1. 什么类不能被继承（这个题目非常经典，我当时答出了private但是他说不好，我就没想到final我以为那个是java的）
 
-> [在使用C++编写程序时,如果有一种需求为实现一个类不能被继承](<https://www.csdn.net/gather_29/MtzacgwsODMtYmxvZwO0O0OO0O0O.html>) 此文给出了两种方式，第一种没看懂。第二种是`final` 
+> [用C++实现一个不能被继承的类](<https://blog.csdn.net/qq_40840459/article/details/80078999>)
+>
+> 因为子类继承父类，子类的构造函数和析构函数会调用父类的构造，解决问题的方法就是，不允许子类的构造函数调用父类的构造与析构。
+>
+> ```c++
+> class SealedClass
+> {
+> public:
+>     static SealedClass* getInstance()
+>     {
+>         return new SealedClass();
+>     }
+>     static void Delete(SealedClass* p)
+>     {
+>         delete p;
+>     }
+>     
+> private:
+>     SealedClass()       //将构造函数和析构函数设为私有
+>     {}
+>     ~SealedClass()
+>     {}
+> };
+> ```
+>
+> 
+>
+> [在使用C++编写程序时,如果有一种需求为实现一个类不能被继承](<https://www.csdn.net/gather_29/MtzacgwsODMtYmxvZwO0O0OO0O0O.html>) 
 >
 > 最好使用`final`关键字实现目的,虚继承实现的方式是以性能为代价的
 
@@ -95,10 +386,14 @@
 > ```
 >
 > 值得注意的是，这些并不是一些语法糖，而是能确确实实地避免很多程序错误，并且暗示编译器可以作出一些优化。调用标记了`final`的`virtual`函数，例如上面的`B2::f`，GNU C++ 前端会识别出，这个函数不能被覆盖，因此会将其从类的虚表中删除。而标记为`final`的类，例如上面的 B1，编译器则根本不会生成虚表。这样的代码显然更有效率。
+>
+> 好像还有一个将构造和析构函数定义为`private`也可以。
 
-## static
 
 
+## Static
+
+## Hash
 
 1. 哈希表，对哈希表的细节要求很高，比如哈希表的冲突检测、哈希函数常用实现、算法复杂度；比如百度二面就让我写一个哈希表插入元素算法，元素类型是任意类型。
 
@@ -153,9 +448,7 @@
 
 1. 在涉及到父子类时构造与析构函数的执行顺序、多重继承时类的成员列表在地址空间的排列
 
-2. 问的最多的就是虚表的布局，尤其是菱形继承(B 和 C 继承 A，D 继承 B 和 C)时每个对象的空间结构分布，比如问 D 有几份虚表，D 中 B 和 C 的成员空间排布
-
-3. 会问你一些 C++11的东西（或者问boost 库，基本上都一样），这个你用过就用过，没有用过就说没用过不要装X，常见的 C++11 需要掌握的一些技术库我也列举一下auto 关键字、for-each 循环、右值及移动构造函数 + std::forward + std::move + stl 容器新增的 emplace_back() 方法、std::thread 库、std::chrono 库、智能指针系列（std::shared_ptr/std::unique_ptr/std::weak_ptr）(智能指针的实现原理一定要知道，最好是自己实现过)、线程库 std::thread + 线程同步技术库std::mutex/std::condition_variable/std::lock_guard 等、lamda表达式（JAVA 中现在也常常考察 lamda 表达式的作用）、std::bind/std::function 库、
+2. 会问你一些 C++11的东西（或者问boost 库，基本上都一样），这个你用过就用过，没有用过就说没用过不要装X，常见的 C++11 需要掌握的一些技术库我也列举一下auto 关键字、for-each 循环、右值及移动构造函数 + std::forward + std::move + stl 容器新增的 emplace_back() 方法、std::thread 库、std::chrono 库、智能指针系列（std::shared_ptr/std::unique_ptr/std::weak_ptr）(智能指针的实现原理一定要知道，最好是自己实现过)、线程库 std::thread + 线程同步技术库std::mutex/std::condition_variable/std::lock_guard 等、lamda表达式（JAVA 中现在也常常考察 lamda 表达式的作用）、std::bind/std::function 库、
 
    其他的就是一些关键字的用法(override、final、delete)，还有就是一些细节如可以像 JAVA 一样在类成员变量定义处给出初始化值。
 
@@ -561,20 +854,122 @@ pf(p);                           // 通过函数指针pf调用函数fun
 > 效率方面，知乎有回答：若`i`是内置类型，就没差别，但若是自定义类型，如`iterator`那就是`++i`比较快了。
 
 
-1. 常量
-
-2. 栈空间的最大值
-
-3. extern“C”
-
-   
-
-   new/delete与malloc/free
 
 
+1. 栈空间的最大值
 
-# MySQL & Redis
+2. extern“C”
 
+## `new/delete`与`malloc/free`
 
+> [动态内存分配、malloc与new的区别](<https://blog.csdn.net/qq_40840459/article/details/81268252>)
+>
+> 
 
+## 运行空间分布
 
+```c++
+#include<stdio.h>
+
+int g_var;
+
+static int s_gvar;
+
+const int cdw_var = 10;
+constexpr int cdw_var2 = 20;
+
+class TestStatic
+{
+public:
+	int fuc();
+	int p;
+	static int s_dwCount;
+	void addfuc();
+};
+
+int TestStatic::s_dwCount = 30;
+
+void TestStatic::addfuc()
+{
+	printf("s_dwCount addr: %llX, value: %d \n", &s_dwCount, s_dwCount);// s_dwCount addr: 601050, value: 30 KEY1
+	s_dwCount++;
+}
+
+int TestStatic::fuc() {
+	void (TestStatic::*paf)() = &TestStatic::addfuc;
+	printf("[__LINE__:%d] 0x%llX\n",__LINE__,paf);//0x4006F6
+	printf("[__LINE__:%d] 0x%llX\n",__LINE__,&paf);// 0x7FFF4CA0F900 KEY4
+	printf("[__LINE__:%d] 0x%llX\n",__LINE__,(void *&) paf);//0x4006F6
+	printf("[__LINE__:%d] 0x%p\n",__LINE__,&TestStatic::addfuc); //0x4006F6 %p -> 指针的值 
+	printf("[__LINE__:%d] 0x%llX\n",__LINE__,&TestStatic::addfuc);//0x4006F6 KEY3
+	return 0;
+}
+
+int main(){
+	printf("[__LINE__:%d] g_var: 0x%llX, value:%d\n",__LINE__,&g_var,g_var); //   g_var: 0x601058, value:0
+	printf("[__LINE__:%d] s_gvar: 0x%llX, value:%d\n",__LINE__,&s_gvar,s_gvar);//s_gvar: 0x60105C, value:0 KEY1
+	
+	int* p1 = (int*)&cdw_var;
+	int* p2 = (int*)&cdw_var2;
+	printf("[__LINE__:%d] p1: 0x%llX, value:0x%llX\n",__LINE__,&p1,p1); //p1: 0x7FFF4CA0F950, value:400A18
+	printf("[__LINE__:%d] p2: 0x%llX, value:0x%llX\n",__LINE__,&p2,p2); //p2: 0x7FFF4CA0F958, value:400A1C KEY2
+	
+	TestStatic* t = new TestStatic;
+	t->addfuc();
+	t->fuc();
+	printf("[__LINE__:%d]: the object address:%0xllX\n", __LINE__,t);//1777030 
+	printf("[__LINE__:%d]: the object variable address:%0xllX\n", __LINE__,&t); // 7FFF4CA0F960 stack address
+	
+	printf("[__LINE__:%d]: the first variable address:%0xllX\n", __LINE__,&(t->p));//1777030 KEY5
+	delete t; t = nullptr;
+	
+	return 0;
+}
+```
+
+`error 1`: 'constexpr' does not name a type
+
+> [error: 'constexpr' does not name a type m- arduino ide](https://stackoverflow.com/questions/24845127/error-constexpr-does-not-name-a-type-m-arduino-ide)
+>
+> To use C++11 Features like constexpr you need to update your IDE to the currently beta version . And then enable C++11 support via compiler flag `-std=c++11`.
+
+- `KEY1`: 未初始化全局变量和静态变量会被初始化为0；存放位置都在一起`0x601058`，地址空间较小。同时类中的静态成员也说存放在静态区域的`0x601050`
+- `KEY2`: `p1`和`p2`本身的地址`0x7FFF4CA0F950`是栈的地址，较高，而存放原常量的地址是`p1`的值，可以看出`0x400A18`还是毕竟低的，是常量区，但是也可以看出来`const`和`constexpr`修饰的值位置差不多。
+- `KEY3`:打印成员函数地址是`0x4006F6`可以看出，地址比全局变量的地址还低，是代码段的地址；而且用`%p`可以直接按16进制打印指针的值，还自带`0x`，不错。还有的话就参考[C/C++ %s %d %u 基本概念与用法](<https://blog.csdn.net/myyllove/article/details/79574582>)，但基本都是常用的了，最多不熟的还差一个`%e`了。
+- `KEY4`: 打印调用类的成员函数中的变量的地址，是栈的`0x7FFF4CA0F900`，但是值得强调的是该地址比`KEY2`中的`p1/p2`地址要低，这就是因为栈的地址是从上到下生长的。
+- `KEY5`: 在类中的函数后新建了一个非静态成员变量，地址和类对象的地址一模一样`0x1777030`表面了函数只有一个地址，无论多少对象都是公用一个地址。而成员变量不同，每个对象都不一样。并且此时没有虚函数表。
+- `KEY6`: 从这个简单的例子中也能窥探这个栈的地址好像很大。
+
+某次完整的output如下：
+
+```shell
+[__LINE__:38] g_var: 0x601058, value:0
+[__LINE__:39] s_gvar: 0x60105C, value:0
+[__LINE__:43] p1: 0x7FFF4CA0F950, value:400A18
+[__LINE__:44] p2: 0x7FFF4CA0F958, value:400A1C
+s_dwCount addr: 601050, value: 30 
+[__LINE__:29] 0x4006F6
+[__LINE__:30] 0x7FFF4CA0F900
+[__LINE__:31] 0x4006F6
+[__LINE__:32] 0x0x4006f6
+[__LINE__:33] 0x4006F6
+[__LINE__:49]: the object address:1777030
+[__LINE__:50]: the object variable address:7FFF4CA0F960
+[__LINE__:52]: the first variable address:1777030
+```
+
+### 字符常量
+
+```c++
+int unittest_char() {
+	/*剑指offer P49:
+	为了节省内存，c/C++把常量字符串放到同一内存中，几个指针赋值相同string时，会指向相同的内存；数组不同*/
+	char st1[] = "test"; //0x00000025d031fa04 "test"
+	char st2[] = "test"; //0x00000025d031fa24 "test"
+	char* st3 = "test";  //0x00007ff6279b5e18 "test"
+	char *st4 = "test";  //0x00007ff6279b5e18 "test"
+	return 0;
+}
+```
+
+上述是在vs2015下调试的结果，但是可以看出来`str1`和`str2`是按照`new`指针对待的，而`str3`和`str4`就是栈上的常量了。
