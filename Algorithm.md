@@ -311,10 +311,33 @@ Error2:
 **或者：**
 初始化为：`int s = 0, e = r * c - 1`，判别为：`while(s <= e)`，但是要注意，更新右值时使用：`e = m - 1;`否则：`[[1,1]] target = 0` endless Loop.
 
+[378. 有序矩阵中第K小的元素](https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/)
 
+这个题用二分法的时候还是有很多需要注意的地方的。
+因为虽然对值二分，但是最终需要这个值是刚好`<=`左边界。但是为了避免死循环e和s的取值方法不变，变的就是当值相等的时候，是左边还是查找左边还是右边？
 
+```c++
+int kthSmallest(vector<vector<int>>& mtx, int k) {
+        int n = mtx.size();
+        int s = mtx[0][0], e = mtx[n - 1][n - 1], m = 0;
+        while(s < e){
+            m = s + ( e - s ) / 2;
+            int smt = 0, c = 0;
+            for(int i = n - 1; i >= 0; --i){
+                while(c < n && mtx[i][c] <= m) ++c;
+                smt += c;
+            }
+            if(smt >= k) e = m;
+            else s = m + 1;
+        }
+        return s;
+    }
+```
+
+事后分析，满足条件是分给左边即`e = m`，因为退出循环的时候一定是`s == e`，那么相等的情况分给左边就有可能取到等值。
 
 # Design
+
 ## `146. LRU(Least Recently Used) Cache`
 **错了几次，过一段时间再写写看。**
 
