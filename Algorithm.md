@@ -357,8 +357,6 @@ int kthSmallest(vector<vector<int>>& mtx, int k) {
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
 
-## `221. Maximal Square`
-这道题就比较容易看出来是动态规划。而且递推方程也好写。This question is easier to see as dynamic programming.And recursive equations are also easy to write.
 ## Array
 ### [1458. Max Dot Product of Two Subsequences](https://leetcode-cn.com/problems/max-dot-product-of-two-subsequences/)
 
@@ -439,8 +437,29 @@ public:
 };
 ```
 
+## Matrix
+
+`221. Maximal Square`
+
+这道题就比较容易看出来是动态规划。而且递推方程也好写。
+
+[`1504. 统计全 1 子矩形`](https://leetcode-cn.com/problems/count-submatrices-with-all-ones/) & [`85. 最大矩形`](https://leetcode-cn.com/problems/maximal-rectangle/)
+
+这两道题相当于最大正方形的加强版，思考方式略有不同。参考[动态规划 - 使用柱状图的优化暴力方法](<https://leetcode-cn.com/problems/maximal-rectangle/solution/zui-da-ju-xing-by-leetcode/>) 主要是需要一个矩阵`D[i][j]`保存第`i`行以上`j`列以左连续`1`的个数。
+
+- 对于`1504`题，如果`D[i][j] == 3`那么，在遍历到`i,j`时，其能组成的矩阵个数就是`min(mn,D[i][j]) + pre`，当然此题还需要一个记录以`i,j`结尾的矩形的个数。
+- 对于`85`，则需要一个记录最大矩形的矩阵。
+
+## string
+
+[`139. 单词拆分`](https://leetcode-cn.com/problems/word-break/)& [`面试题 17.13. 恢复空格`](https://leetcode-cn.com/problems/re-space-lcci/)
+
+这两道题类似，都是用`dictionary`的单词尽可能匹配字符串的题目，`139`相对单调点，只需要说明是或者不是即可，`17.13`则要返回前端有多少不是的。需要注意的是要清楚`最大匹配个数`的概念，即不可拆分单词。
+
+
 
 # Graph
+
 [`1462. 课程安排 IV`](https://leetcode-cn.com/problems/course-schedule-iv/)
 这题用的数据结构算是邻接矩阵吧，一开始我用的是邻接表，显然很蠢。
 
@@ -600,7 +619,10 @@ max  7 7 6 6
 maid 1 1 3 3
 ```
 
+
+
 # Sliding Windows
+
 ## `209. Minimum Size Subarray Sum`
 这个题限定了是正整数，目标和**范围**，求最小连续子数组。已经很明显是滑动窗口了。This question is limited to positive integers, range of target sums, and finding the minimal length of continuous sub-array.It is clearly a sliding window.
 
@@ -636,6 +658,15 @@ Even if it is not elegant, the last time I was pitted by an empty string, this t
 istringstream ss(s);
 string w;
 while(ss >> w){ }
+
+/*分隔逗号*/
+std::string input ="abc,def,ghi";
+std::istringstream ss(input);
+std::string token;
+
+while(std::getline(ss, token, ',')) {
+ std::cout << token << 'n';
+}
 ```
 
 `String`头文件中还提供了多种`string to integer/folat/double/long`的接口函数：
