@@ -458,6 +458,10 @@ public:
 
 
 
+## 石头游戏
+
+[石子游戏](https://leetcode-cn.com/problems/stone-game/) 
+
 # Graph
 
 [`1462. 课程安排 IV`](https://leetcode-cn.com/problems/course-schedule-iv/)
@@ -465,6 +469,55 @@ public:
 
 - [并查集思想 双百](https://leetcode-cn.com/problems/course-schedule-iv/solution/bing-cha-ji-si-xiang-shuang-bai-by-tiooo/)这个并查集很牛逼，很牛逼。
 - [Floyd也可以，但是效率稍弱一点](https://leetcode-cn.com/problems/course-schedule-iv/solution/floyd-by-over-lord/)
+
+## 优化
+
+搜索过程如何优化，目前接触到两种
+
+1. 利用优先队列`priority_queue`对待处理的队列进行排序，典型如[1514. 概率最大的路径](https://leetcode-cn.com/problems/path-with-maximum-probability/)。
+2. 双向广度优先搜索，典型如[127. 单词接龙](https://leetcode-cn.com/problems/word-ladder/) 解释:
+
+> 广度优先搜索的搜索空间大小依赖于每层节点的分支数量。假如每个节点的分支数量相同，搜索空间会随着层数的增长指数级的增加。考虑一个简单的二叉树，每一层都是满二叉树的扩展，节点的数量会以 2 为底数呈指数增长。
+> [作者：LeetCode|链接](https://leetcode-cn.com/problems/word-ladder/solution/dan-ci-jie-long-by-leetcode/)
+
+```c++
+class Solution {
+public:
+    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+        unordered_set<string> wordSet (wordList.begin(), wordList.end());
+        if(!wordSet.count(endWord)) return 0;
+        unordered_set<string> beginSet {beginWord};
+        unordered_set<string> endSet {endWord};
+
+        int stepcount = 1;
+        int n = wordList.size();
+        int wordsize = beginWord.size();
+        while(beginSet.size()){
+            ++stepcount;
+            unordered_set<string> nextSet;
+            for(string s : beginSet){
+                wordSet.erase(s); // 从原数据集里删除
+            }            
+            for(auto &str : beginSet){
+                for(int i = 0; i < wordsize; ++i){
+                    string s = str;
+                    for(char j = 'a'; j <= 'z'; ++j){ //这样找固定就找26次，如果直接在wordset里找不知道要找多少次呢
+                        s[i] = j;
+                        if(!wordSet.count(s)) continue;
+                        if(endSet.count(s)) return stepcount;
+                        else{
+                            nextSet.emplace(s);
+                        }
+                    }
+                }
+            }
+            beginSet = move(nextSet);// move用的好呀
+            if(beginSet.size() > endSet.size()) swap(beginSet, endSet); //swap 每次只处理较短的队列
+        }
+        return 0;
+    }
+};
+```
 
 # Greedy
 以跳跃游戏为例，是贪心算法。如何从题目中分离出是贪心算法才是关键。Take the jump game as an example, it is a greedy algorithm.How to separate from the problem is the greedy algorithm is the key. 此外还有一些细节需要考虑：There are also some details to consider:
@@ -475,6 +528,7 @@ public:
 ## `1. two sum`
 [*13 May 2020*]
 这是一个基础题，但是解题思想很常用。This is a basic question, but the idea of solving the problem is very common
+
 1. 通过排序`O(N logN)` 降低时间复杂度。Reduce time complexity by sorting with `O (N logN)`.
 2. 利用`hash`的特点，用空间换时间。将查找组合问题换成了固定一个数在`hash`中找另一个数的问题。Use the features of `hash` to trade space for time.Replace the search combination problem with the problem of fixing one number to find another number in `hash`.
 
@@ -643,6 +697,77 @@ maid 1 1 3 3
 
 上面那题，还有一个荷兰国旗题都是关于这个`3-ways-patiton`算法的。
 
+
+
+## Merge Sort
+
+[315. 计算右侧小于当前元素的个数](https://leetcode-cn.com/problems/count-of-smaller-numbers-after-self/) & [剑指 Offer 51. 数组中的逆序对](https://leetcode-cn.com/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)
+
+本质还是并归排序，看看递归和非递归咋写的。
+
+#### [148. 排序链表](https://leetcode-cn.com/problems/sort-list/) 链表并归 
+
+`Time complexity: O(nlogn), space complexity: O(1)`
+
+```c++
+class Solution {
+    ListNode* merge2(ListNode* l1, ListNode* l2){
+        ListNode* dm = new ListNode(-1);
+        ListNode* pre = dm;
+        while(l1 && l2){
+            if(l1->val > l2->val){
+                pre->next = l2;
+                l2 = l2->next;
+            }
+            else{
+                pre->next = l1;
+                l1 = l1->next;
+            }
+            pre = pre->next;
+        }
+        pre->next = l1?l1:l2;
+        pre = dm->next;
+        return pre;
+    }
+public:
+    ListNode* sortList(ListNode* head) {
+        int n = 0;
+        ListNode* t = head;
+        for(;t;t = t->next) ++n;
+        
+        ListNode *dm = new ListNode(-1), *dpre = dm;
+        for(int i = 1; i < n; i *= 2){
+            int c = i;
+            t = head;
+            dpre = dm;
+            while(t){
+                ListNode * first = t, *pre = nullptr;
+                c = i;
+                while(t && c--) {
+                    pre = t;
+                    t = t->next;
+                }
+                pre->next = nullptr;
+                c = i;
+                ListNode* second = t;
+                while(t && c--){
+                    pre = t;
+                    t = t->next;
+                }
+                pre->next = nullptr;
+                dpre->next = merge2(first,second);
+                dpre = t;
+            }
+        }
+        head = dm->next;
+        delete dm; dm = nullptr;
+        return head;
+    }
+};
+```
+
+
+
 # Stack
 ## `20. Valid Parentheses`
 `Error 2` 写得不优雅就算了，上次被空串坑，这次又被`"["` 难倒了。哎
@@ -772,7 +897,11 @@ public:
 ```
 ## 线段树
 
-[Vedio](<https://www.bilibili.com/video/BV1ep4y197JE>)
+[Vedio ](<https://www.bilibili.com/video/BV1ep4y197JE>)
+
+[线段树详解 （原理，实现与应用）](https://www.cnblogs.com/AC-King/p/7789013.html)
+
+> 
 
 # Trouble
 
