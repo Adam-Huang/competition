@@ -12,6 +12,10 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 
 这个感觉真是不容易想到，从表达式出发`A[i] + A[j] + i - j`看成`A[i] + i`和`A[j] - j`的和，维护一个其中的最大值即可。说难吧，也不难，但是为啥就是想不到呢？
 
+[`134. 加油站`](https://leetcode-cn.com/problems/gas-station/)
+
+这个题关键是明白：如果A站不能到B站，那么A，B之间到任何一个站都不能到B站。
+
 ## Trapping rain water
 - [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。It is related to rainwater, because it is the amount of rainwater determined by the short side, so you only need to move the short side each time.
 
@@ -458,9 +462,23 @@ public:
 
 
 
-## 石头游戏
+## 博弈游戏
 
 [石子游戏](https://leetcode-cn.com/problems/stone-game/) 
+
+[1510. 石子游戏 IV](https://leetcode-cn.com/problems/stone-game-iv/) & [1025. 除数博弈](https://leetcode-cn.com/problems/divisor-game/)
+
+这两个类似，设`dp[i]`是先手在`i`位的结果。
+
+```shell
+      0 1 2 3 4 5 6 7 8 9
+1025: 1 0 1 0 1 0 1 0 1 0 # 只能取 i 的因数个
+              |
+1510: 0 1 0 1 1 0 1 0 1 1 # 只能取小于 i 又是平方数的数
+                      |-> 2种可能 拿1给对手7；拿4给对手4；
+```
+
+
 
 # Graph
 

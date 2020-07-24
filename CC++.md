@@ -1,6 +1,6 @@
 - [linux C++后台开发面试题](<https://zhuanlan.zhihu.com/p/103027724>)
 - [知乎：程序员面试，面试官更注重代码量、项目经验还是操作系统、数据结构这种基础课程？两者比例是五五开还是多少？](https://www.zhihu.com/question/264198516)
-- [c/c++ (cn)](https://interview.huihut.com/#/) 这篇文章已经总结的相当全面了。This article has been summarized quite comprehensively.
+- [c/c++ (cn)](https://interview.huihut.com/#/) 这篇文章已经总结的相当全面了。
 - [C/C++复习指北](<https://blog.csdn.net/qq_40840459/category_7280598.html>)
 
 
@@ -900,9 +900,12 @@ pf(p);                           // 通过函数指针pf调用函数fun
 ## 运行空间分布
 
 ```c++
-#include<stdio.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <unistd.h>
 
-int g_var;
+int g_var;         //bss
+int data_var0 = 1; //初始化数据
 
 static int s_gvar;
 
@@ -937,21 +940,30 @@ int TestStatic::fuc() {
 }
 
 int main(){
-	printf("[__LINE__:%d] g_var: 0x%llX, value:%d\n",__LINE__,&g_var,g_var); //   g_var: 0x601058, value:0
-	printf("[__LINE__:%d] s_gvar: 0x%llX, value:%d\n",__LINE__,&s_gvar,s_gvar);//s_gvar: 0x60105C, value:0 KEY1
+	printf("[__LINE__:%d] Address of main(Code Segment):%p\n",__LINE__,main);// 0x400871
+	
+	printf("[__LINE__:%d] Data Location: Address of data_var(Data Segment):%p\n",__LINE__,&data_var0); // 0x602058
+	static int data_var1=4;
+	printf("[__LINE__:%d] Local static variable: Address of data_var(Data Segment):%p\n",__LINE__,&data_var1); // 0x602060
+	
+	printf("[__LINE__:%d] BSS Location: g_var: 0x%llX, value:%d\n",__LINE__,&g_var,g_var); //   g_var: 0x602068, value:0
+	printf("[__LINE__:%d] s_gvar: 0x%llX, value:%d\n",__LINE__,&s_gvar,s_gvar);//s_gvar: 0x60206C, value:0 KEY1
 	
 	int* p1 = (int*)&cdw_var;
 	int* p2 = (int*)&cdw_var2;
 	printf("[__LINE__:%d] p1: 0x%llX, value:0x%llX\n",__LINE__,&p1,p1); //p1: 0x7FFF4CA0F950, value:400A18
 	printf("[__LINE__:%d] p2: 0x%llX, value:0x%llX\n",__LINE__,&p2,p2); //p2: 0x7FFF4CA0F958, value:400A1C KEY2
 	
+	char *b = (char *)sbrk((ptrdiff_t)0);
+	printf("[__LINE__:%d] Heap Location: Initial end of heap:%p\n",__LINE__,b); // 0x259d000 KEY7
+	
 	TestStatic* t = new TestStatic;
 	t->addfuc();
 	t->fuc();
-	printf("[__LINE__:%d]: the object address:%0xllX\n", __LINE__,t);//1777030 
-	printf("[__LINE__:%d]: the object variable address:%0xllX\n", __LINE__,&t); // 7FFF4CA0F960 stack address
+	printf("[__LINE__:%d]: the object address:0x%llX\n", __LINE__,t);//1777030 
+	printf("[__LINE__:%d]: the object variable address:0x%llX\n", __LINE__,&t); // 7FFF4CA0F960 stack address
 	
-	printf("[__LINE__:%d]: the first variable address:%0xllX\n", __LINE__,&(t->p));//1777030 KEY5
+	printf("[__LINE__:%d]: the first variable address:0x%llX\n", __LINE__,&(t->p));//1777030 KEY5
 	delete t; t = nullptr;
 	
 	return 0;
@@ -964,7 +976,7 @@ int main(){
 >
 > To use C++11 Features like constexpr you need to update your IDE to the currently beta version . And then enable C++11 support via compiler flag `-std=c++11`.
 
-- `KEY1`: 未初始化全局变量和静态变量会被初始化为0；存放位置都在一起`0x601058`，地址空间较小。同时类中的静态成员也说存放在静态区域的`0x601050`
+- `KEY1`: 未初始化全局变量和静态变量会被初始化为0；存放位置都在一起`.bss 0x601058`，地址空间较小。同时类中的静态成员（其实全部的初始化成员）也说存放在静态区域的`0x601050`（数据区）。从后续补充的例子上也看得出来，是有数据段合并的，具体可参考《操作系统》
 - `KEY2`: `p1`和`p2`本身的地址`0x7FFF4CA0F950`是栈的地址，较高，而存放原常量的地址是`p1`的值，可以看出`0x400A18`还是毕竟低的，是常量区，但是也可以看出来`const`和`constexpr`修饰的值位置差不多。
 - `KEY3`:打印成员函数地址是`0x4006F6`可以看出，地址比全局变量的地址还低，是代码段的地址；而且用`%p`可以直接按16进制打印指针的值，还自带`0x`，不错。还有的话就参考[C/C++ %s %d %u 基本概念与用法](<https://blog.csdn.net/myyllove/article/details/79574582>)，但基本都是常用的了，最多不熟的还差一个`%e`了。
 - `KEY4`: 打印调用类的成员函数中的变量的地址，是栈的`0x7FFF4CA0F900`，但是值得强调的是该地址比`KEY2`中的`p1/p2`地址要低，这就是因为栈的地址是从上到下生长的。
@@ -974,19 +986,24 @@ int main(){
 某次完整的output如下：
 
 ```shell
-[__LINE__:38] g_var: 0x601058, value:0
-[__LINE__:39] s_gvar: 0x60105C, value:0
-[__LINE__:43] p1: 0x7FFF4CA0F950, value:400A18
-[__LINE__:44] p2: 0x7FFF4CA0F958, value:400A1C
-s_dwCount addr: 601050, value: 30 
-[__LINE__:29] 0x4006F6
-[__LINE__:30] 0x7FFF4CA0F900
-[__LINE__:31] 0x4006F6
-[__LINE__:32] 0x0x4006f6
-[__LINE__:33] 0x4006F6
-[__LINE__:49]: the object address:1777030
-[__LINE__:50]: the object variable address:7FFF4CA0F960
-[__LINE__:52]: the first variable address:1777030
+(base) ejior@ejior-XPS-8930:~/huangyue/linuxcode$ ./exe
+[__LINE__:41] Address of main(Code Segment):0x400871
+[__LINE__:43] Data Location: Address of data_var(Data Segment):0x602058
+[__LINE__:45] Local static variable: Address of data_var(Data Segment):0x602060
+[__LINE__:47] BSS Location: g_var: 0x602068, value:0
+[__LINE__:48] s_gvar: 0x60206C, value:0
+[__LINE__:52] p1: 0x7FFD9B58C038, value:0x400AC8
+[__LINE__:53] p2: 0x7FFD9B58C040, value:0x400ACC
+[__LINE__:56] Heap Location: Initial end of heap:0x105d000
+s_dwCount addr: 60205C, value: 30 
+[__LINE__:32] 0x400736
+[__LINE__:33] 0x7FFD9B58BFE0
+[__LINE__:34] 0x400736
+[__LINE__:35] 0x0x400736
+[__LINE__:36] 0x400736
+[__LINE__:61]: the object address:0x103D030
+[__LINE__:62]: the object variable address:0x7FFD9B58C048
+[__LINE__:64]: the first variable address:0x103D030
 ```
 
 ### 字符常量
