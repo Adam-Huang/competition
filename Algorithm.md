@@ -793,7 +793,49 @@ Even if it is not elegant, the last time I was pitted by an empty string, this t
 `Error 3` 用栈可以很优雅。Using the stack can be very elegant.但是也被坑了一次But also got pitted once `"]"` Be careful when pop from a stack!!
 
 
+
+## 最大坡度相关
+
+一个反面例子，及`iterator`的新用法[975. 奇偶跳](https://leetcode-cn.com/problems/odd-even-jump/)
+
+```shell
+# 前期分析
+[10,13,12,14,15]
+o:        0  1  1
+e:        0  0  1
+             |->在此位置开始第奇数次跳跃 OK 偶数次跳跃 Fail
+		  |-> 在次位置奇数次跳跃只能到达14  偶数跳跃   Fail
+	   |->在此位置奇数跳能跳到14 但是NOT OK 偶数跳到12 Fail
+	  ...
+	  
+	  需要维护两个栈，一个单调增，一个单调减，来线性计算奇偶次能跳跃到哪。
+# 错在：
+idx	0	1	2	3	4	5	6	7	8
+val	1	2	3	2	1	4	4	5   6
+o	1	1	1	1	1	0	1	1	
+e	1	1	1	1	0	1	0	1
+			|			|
+			|		|
+			|	|
+			|-> 为了找到第一个大于等于2的数，我们将A[4]弹出递增栈
+		|
+	|
+|-> 问题处在这儿| 因为在1、2、3处的都将A[4] = 1弹出了，因此找不到 1了！
+想想问题出在哪？
+'因为要找的不是第一个大于等于x的元素，而且最接近的元素。单调栈有问题吧。根本原因要认识到！'
+```
+
+`stl iterater用法`[一个题解](<https://leetcode-cn.com/problems/odd-even-jump/solution/c-version-of-2-official-solutions-by-riroaki/>) & 详细用法：[C++ STL prev()和next()函数用法详解](<http://c.biancheng.net/view/7384.html>)
+
+```c++
+auto it = orderIdx.find(A[i]), prevIt = prev(it, 1), nextIt = next(it, 1); 
+//这个比lower_bound和upper_bound智能太多了
+```
+
+
+
 # String
+
 [`151. Reverse Words in a String`](https://leetcode-cn.com/problems/reverse-words-in-a-string/)
 这个流的运用还蛮有用的，细节可参考[stringstream的用法](https://zhuanlan.zhihu.com/p/44435521)：
 

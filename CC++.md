@@ -172,7 +172,7 @@ int unittest_virtualtable()
 
 - `KEY1`：有虚函数就一定有虚函数表，表内存放的应该是函数地址，即使是继承的子类也会有新的表，当然了，如果子类没有重载的函数，表内地址还是原来函数的地址。
 - `KEY2`：此处可以解释菱形继承时的现象。首先如果哦继承子多个父类，就会有多个虚函数表，表的地址各不相同，但是，如果重载了哪个函数，那么对应表内的函数地址也就修改了。
-- `windows`平台的函数地址怎么这么高，还是都很高？用linux跑一下试试。
+- `windows`平台的函数地址怎么这么高，还是都很高？用`linux`跑一下试试。
 
 **Linux**
 
@@ -483,7 +483,127 @@ int main()
 
    
 
+## 类和结构体
 
+### 默认拷贝函数
+
+```c++
+#include<bits/stdc++.h>
+
+using namespace std;
+
+int main(){
+    vector<int> t(10);
+    struct temp{
+     vector<int> ls;
+    };
+    
+    class ctp{
+        public:
+        vector<int> ls;
+    };
+    struct temp t1;
+    t1.ls.push_back(1);
+    cout << t1.ls.capacity() << " | ";
+    t1.ls.push_back(2);
+    cout << t1.ls.capacity() << " | ";
+    t1.ls.push_back(3);
+    cout << t1.ls.capacity() << " | ";
+    t1.ls.push_back(4);
+    cout << t1.ls.capacity() << " | ";
+    t1.ls.push_back(4);
+    cout << t1.ls.capacity() << " | ";// KEY 1 容量成本提升
+    cout << endl;
+    struct temp t2 = t1;
+    for(auto it = t2.ls.begin(); it != t2.ls.end(); ++it) cout << *it << " | ";
+    struct temp t3(t1);
+    for(auto it = t3.ls.begin(); it != t3.ls.end(); ++it) cout << *it << " | ";
+    cout <<"\n----------------------------"<< endl;
+    
+    t1.ls[4] = 5;
+    for(auto it = t2.ls.begin(); it != t2.ls.end(); ++it) cout << *it << " | ";
+    for(auto it = t3.ls.begin(); it != t3.ls.end(); ++it) cout << *it << " | ";
+    cout <<"\n----------------------------"<< endl;
+    
+    class ctp c1;
+    c1.ls = t;// vector 拷贝是深拷贝 ， struct & class 拷贝都是深拷贝
+    t[5] = 1;
+    c1.ls[5] = 2;
+    class ctp c2(c1);
+    class ctp c3 = c1;
+    t[4] = 5;
+    c1.ls[4] = 7;
+    for(auto it = t.begin(); it != t.end(); ++it) cout << *it << " | ";
+    cout << endl;
+    for(auto it = c1.ls.begin(); it != c1.ls.end(); ++it) cout << *it << " | ";
+    cout << endl;
+    for(auto it = c2.ls.begin(); it != c2.ls.end(); ++it) cout << *it << " | ";
+    cout << endl;
+    for(auto it = c3.ls.begin(); it != c3.ls.end(); ++it) cout << *it << " | ";
+    cout << endl;
+    return 0;
+}
+/*
+vector.capacity(): 1 | 2 | 4 | 4 | 8 | 
+struct copy: 
+1 | 2 | 3 | 4 | 4 | 1 | 2 | 3 | 4 | 4 | 
+----------------------------
+1 | 2 | 3 | 4 | 4 | 1 | 2 | 3 | 4 | 4 | 
+----------------------------
+
+vecotr modified:  0 | 0 | 0 | 0 | 5 | 1 | 0 | 0 | 0 | 0 | 
+class 1 modified: 0 | 0 | 0 | 0 | 7 | 2 | 0 | 0 | 0 | 0 | 
+class 2 unchange: 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 
+class 3 unchange: 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 |
+*/
+```
+
+
+
+
+
+## 模板
+
+### 模板类的单例模式
+
+```c++
+template<typename T>
+class Single
+{
+public:
+    static T* getinstance(void);
+    static void destory(void);
+private:
+    Single(){}
+    ~Single(){}
+    Single(const Single&){}
+    Single& operator=(const Single&){}
+    static T* instance;
+};
+
+template<typename T>
+T* Single<T>:: instance = nullptr;
+
+template<typename T>
+Single<T>::getinstance(){
+    lock();
+    if(instance == nullptr){
+        instance = new T;
+    }
+    unlock();
+    return instance;
+}
+
+template<typename T>
+void Single<T>::destory(){
+    lock();
+    if(instance != nullptr){
+        delete instance;
+        instance = nullptr;
+    }
+    unlock();
+}
+```
 
 
 
@@ -494,7 +614,7 @@ int main()
 
 ## [nullptr & NULL](<https://blog.csdn.net/u011068702/article/details/64906864>)
 
-> C里面的null和C++里面的nullptr、NULL介绍
+> C里面的null和C++里面的`nullptr`、NULL介绍
 >
 > ```c++
 > /* Define NULL pointer value */
@@ -616,7 +736,7 @@ int main()
 >
 > ————————————————
 >
-> 这篇文章还说了右值引用的意义，真是对效率要求比较极致了。连拷贝构造都想省略。暂时level还达不到。
+> 这篇文章还说了右值引用的意义，真是对效率要求比较极致了。
 
 3. `shared_ptr`
 
@@ -884,12 +1004,21 @@ pf(p);                           // 通过函数指针pf调用函数fun
 >
 > 效率方面，知乎有回答：若`i`是内置类型，就没差别，但若是自定义类型，如`iterator`那就是`++i`比较快了。
 
+## `extern“C”`
 
+**加上extern "C"后，会指示编译器这部分代码按C语言（而不是C++）的方式进行编译。由于C++支持函数重载，因此编译器编译函数的过程中会将函数的参数类型也加到编译后的代码中，而不仅仅是函数名；而C语言并不支持函数重载，因此编译C语言代码的函数时不会带上函数的参数类型，一般只包括函数名。**
 
+### 重载原理
 
-1. 栈空间的最大值
-
-2. extern“C”
+> [函数重载写法与实现原理](<https://blog.csdn.net/a15929748502/article/details/80748747>)
+>
+> ![](https://img-blog.csdn.net/20180621145840901?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ExNTkyOTc0ODUwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+>
+> ![](https://img-blog.csdn.net/20180621151638209?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ExNTkyOTc0ODUwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+>
+> ![](https://img-blog.csdn.net/20180621151715674?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ExNTkyOTc0ODUwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
+>
+> C++代码在编译时会对函数进行重命名，从这个角度讲函数重载本质上还是不同的函数
 
 ## `new/delete`与`malloc/free`
 
@@ -1020,4 +1149,24 @@ int unittest_char() {
 }
 ```
 
-上述是在vs2015下调试的结果，但是可以看出来`str1`和`str2`是按照`new`指针对待的，而`str3`和`str4`就是栈上的常量了。
+上述是在`vs2015`下调试的结果，但是可以看出来`str1`和`str2`是按照`new`指针对待的，而`str3`和`str4`就是栈上的常量了。
+
+## `Lambda`
+
+**值捕获**
+
+**引用捕获**
+
+**隐式捕获**有两种方式，分别是[=]和[&]。[=]表示以值捕获的方式捕获外部变量，[&]表示以引用捕获的方式捕获外部变量。
+
+# STL
+
+## erase
+
+- `vector deque`都是erase之后给下一个迭代器是有返回值的
+- `set map`删除之后后面的还有效，但是需要在删除之前保留一下下一个迭代器
+- `list`兼顾上两者的特性。
+
+## `deque`
+
+![](http://c.biancheng.net/uploads/allimg/191213/2-19121316430U40.gif)
