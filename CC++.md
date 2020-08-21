@@ -51,7 +51,10 @@
 
 ## 多态
 
-多态的实现主要分为静态多态和动态多态，静态多态主要是重载，在编译的时候就已经确定；动态多态是用虚函数机制实现的，在运行期间动态绑定。
+多态的实现主要分为静态多态和动态多态，
+
+- 静态多态主要是重载，在编译的时候就已经确定；
+- 动态多态是用虚函数机制实现的，在运行期间动态绑定。
 
 ### 虚函数
 
@@ -337,8 +340,26 @@ int main()
 #### 虚函数与纯虚函数的区别
 
 > [虚函数与纯虚函数的区别](<https://blog.csdn.net/qq_40840459/article/details/82351726>)
+
+#### 构造函数不可以是虚函数
+
+> 虚函数相应一个指向`vtable`虚函数表的指针，但是这个指向`vtable`的指针事实上是存储在对象的内存空间的。假设构造函数是虚的，就须要通过 `vtable`来调用，但是对象还没有实例化，也就是内存空间还没有，怎么找`vtable`呢？所以构造函数不能是虚函数。
 >
-> 
+> 编译器之所以不支持虚构造函数主要原因就是没有必要，所以正好这种实现方式也不支持，巧合而已。
+
+#### 虚函数表什么时候建立
+
+应该是编译期建立的。
+
+> 同属一个类的不同的实例化对象其实是共用一张虚函数表的。[C++一个类实例化后的对象中虚函数表是共用的吗](<https://blog.csdn.net/kezhi9195/article/details/92562186>)
+
+
+
+### 重载
+
+C++里什么样的函数不能重载？
+
+> 析构函数无形参，不能重载！
 
 ## 类 
 
@@ -564,6 +585,9 @@ class 3 unchange: 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 |
 
 ## 模板
 
+C++如何实现模板
+C++为我们提供了函数模板机制。所谓函数模板，实际上是建立一个通用函数，其函数类型和形参类型不具体指定，用一个虚拟的类型来代表。这个通用函数就称为函数模板。
+
 ### 模板类的单例模式
 
 ```c++
@@ -716,27 +740,7 @@ void Single<T>::destory(){
    cout << *ps2 << *ps1 << endl;
    ```
 
-`std::move()`
-
-> [c++ 之 std::move 原理实现与用法总结](<https://blog.csdn.net/p942005405/article/details/84644069>)
->
-> 在C++11中，标准库在`<utility>`中提供了一个有用的函数`std::move`，`std::move`并不能移动任何东西，**它唯一的功能是将一个左值强制转化为右值引用，继而可以通过右值引用使用该值，以用于移动语义**。从实现上讲，`std::move`基本等同于一个类型转换：
->
-> ```c++
-> static_cast<T&&>(lvalue);
-> ```
-
-`左值、左值引用、右值、右值引用`
-
-> [C++ 11 左值，右值，左值引用，右值引用，std::move, std::foward](<https://blog.csdn.net/xiaolewennofollow/article/details/52559306>) 有例子
->
-> 左值的声明符号为`&`， 为了和左值区分，右值的声明符号为`&&`
->
-> **转移语义是和拷贝语义相对的**，可以类比文件的剪切与拷贝，当我们将文件从一个目录拷贝到另一个目录时，速度比剪切慢很多。
->
-> ————————————————
->
-> 这篇文章还说了右值引用的意义，真是对效率要求比较极致了。
+> 
 
 3. `shared_ptr`
 
@@ -1159,9 +1163,120 @@ int unittest_char() {
 
 **隐式捕获**有两种方式，分别是[=]和[&]。[=]表示以值捕获的方式捕获外部变量，[&]表示以引用捕获的方式捕获外部变量。
 
-# STL
 
-## erase
+
+## 宏
+
+函数宏的书写
+
+`#define MAX(a,b) ((a)>(b)?(a):(b)) `，这就是一个简单的函数宏，我们同样可以传递参数，实现功能。但是在书写上注意两点MAX和左“（”之间没有空格，因为宏定义把标示符后的第一个空格会认为是标示符与字符串的分割。当然我们在写宏的时候有时候会写多行，这样我们一般用“\”进行分割
+
+宏的副作用
+
+这也是函数宏和函数不同的地方。比如上边的例子 `#define MAX(a,b) ((a)>(b)?(a):(b))`我们传入的参数是++a和++b。很显然如果使用函数实现这个功能的话a和b均自加一次，但是如果用宏实现替换后就变成`((++a)>(++b)?(++a):(++b))`,很明显，这与函数就完全不同了。
+
+
+
+### 一个#和两个#
+
+在C语言的宏中，#的功能是将其后面的宏参数进行字符串化操作（`Stringfication`），简单说就是在对它所引用的宏变量通过替换后在其左右各加上一个双引号。
+
+```c++
+#include<bits/stdc++.h>
+#define PSQR(x) printf("the square of " #x " is %d.\n",(x)*(x))
+using namespace std;
+
+int main()
+{
+    int y =4;  
+    PSQR(y);  
+    PSQR(2+4);
+    /*
+    the square of y is 16.
+    the square of 2+4 is 36. 执行结果很好的说明了，#并不是define专用，而是一个字符化的符号
+    */
+    return 0;
+}
+```
+
+`##`被称为连接符（`concatenator`）`##`运算符可以使用类函数宏的替换部分。另外，##还可以用于类对象宏的替换部分。这个运算符把两个语言符号组合成单个语言符号。
+
+它的作用是先分隔，然后进行强制连接。
+
+```c++
+#include<bits/stdc++.h>
+
+#define XNAME(n) x##n  
+#define PXN(n) printf("x"#n" = %d\n",x##n)  
+
+int main(void)  
+{  
+    int XNAME(1)=12;//int x1=12;   方便批量生成变量
+    PXN(1);//printf("x1 = %d\n", x1);  
+    
+    return 0;  
+}  
+```
+
+`do{}while(0)`好处：
+
+1. 空的宏定义避免`warning`
+2. 完成比较复杂的实现。
+3. 使用`do{….}while(0) `把它包裹起来，成为一个独立的语法单元，从而不会与上下文发生混淆。同时因为绝大多数的编译器都能够识别`do{…}while(0)`这种无用的循环并进行优化，所以使用这种方法也不会导致程序的性能降低
+
+```c++
+#include<bits/stdc++.h>
+
+#define PRINT1(a,b)        \
+     {                  \
+       printf("print 1 a\n"); \
+       printf("print 1 b\n"); \
+     }
+ 
+#define      PRINT2(a, b)      \
+   do{               \
+       printf("print 2 "#a" a\n"); \
+       printf("print 2 "#b" b\n"); \
+    }while(0)  
+
+#define PRINT(a) \
+     do{\
+     printf("%s: %d\n",#a,a);\
+     printf("%d: %d\n",a,a);\
+     }while(0)
+
+#define TYPE1(type,name)   type name_##type##_type //TYPE1(int, c); 转换为：int 　name_int_type ; (因为##号将后面分为 name_ 、type 、 _type三组，替换后强制连接)
+#define TYPE2(type,name)   type name##_##type##_type //TYPE2(int, d);转换为： int 　d_int_type ; (因为##号将后面分为 name、_、type 、_type四组，替换后强制连接)
+
+#define ERROR_LOG(module)   fprintf(stdin,"error: "#module"\n")
+
+int main(void)  
+{  
+    int a = 20, b = 30; 
+    TYPE1(int,c);
+    ERROR_LOG("add");
+    name_int_type = a;
+    TYPE2(int, d);
+    d_int_type = a;
+    PRINT(a);
+    if (a > b)
+    {
+        PRINT1(a, b);
+    }
+    else
+    {
+        PRINT2(a, b);
+        //PRINT2(TYPE2(int, d),TYPE1(int,c));
+    }
+    return 0;  
+}  
+```
+
+
+
+# `STL`
+
+## `erase`
 
 - `vector deque`都是erase之后给下一个迭代器是有返回值的
 - `set map`删除之后后面的还有效，但是需要在删除之前保留一下下一个迭代器
@@ -1170,3 +1285,75 @@ int unittest_char() {
 ## `deque`
 
 ![](http://c.biancheng.net/uploads/allimg/191213/2-19121316430U40.gif)
+
+
+
+## `vector`
+
+不能用`memset`初始化，不然会让`iterator`失效好像。
+
+[vector扩容原理说明](https://blog.csdn.net/yangshiziping/article/details/52550291) 
+
+> **`VS2015`中以1.5倍扩容，`GCC`以2倍扩容**
+> 为什么要这样扩容？
+> 简单来说是为了常数的时间复杂度，`push_back()` `n`个数，扩容`logm(n)`次，简单的带入可知最多`32n`次搬移，那平均到每次时间还是O(1)；
+
+## `STL`的内存管理
+
+[STL内存管理详细分析](https://www.jianshu.com/p/3225a0851382)
+
+> 从总体上看，`STL`空间配置器分为两级，针对大内存的申请，调用第一级空间配置器，对于小内存的申请，则调用第二级配置器。
+>
+> ![第一级内存配置器allocate](https://upload-images.jianshu.io/upload_images/11176578-da74fb87c37124ca.png?imageMogr2/auto-orient/strip|imageView2/2/w/997/format/webp)
+>
+> 
+
+ [STL内存管理](https://www.cnblogs.com/zpjjtzzq/p/4540545.html)
+
+> 先从`STL`的内存管理开始总结。掌管`STL`内存控制的是一个叫空间适配器（`alloc`）的东西。`STL`有两个空间适配器，`SGI`标准空间适配器（`allocate`）和`SGI`特殊的空间适配器（`alloc`），前者只是对c++的new和delete进行了简单的封装。下面主要介绍的是`alloc`空间适配器。
+>
+> 其中new操作符包含了两个阶段：
+>
+> 1、operator new配置空间；
+>
+> 2、调用Foo构造函数构造内容。
+>
+> 同理，delete操作符也包含调用析构函数和释放空间两个过程。
+>
+> `STL`内存管理参考了这种方法，将空间配置和构造内容分开。内存配置和内存释放分别由`alloc::allocate() `和` alloc::deallocate() `负责，对象构造和析构分别由`alloc::construct() `和 `alloc::destroy()`负责。
+>
+> **空间的配置和释放**
+>
+> SGI以malloc()和free()完成内存配置与释放。为了解决小型区块所可能造成的内存破碎问题，SGI设计了双层级配置器，第一级直接使用malloc()和free()配置和释放内存空间，第二级配置器采用如下策略：当配置区块超过128 bytes 时，视为足够大，调用第一级配置器，当小于128 bytes 时，采用memory pool的整理方式。下面主要总结第二级配置器。
+>
+> 
+
+## `std::move()`
+
+> [c++ 之 std::move 原理实现与用法总结](<https://blog.csdn.net/p942005405/article/details/84644069>)
+>
+> 在C++11中，标准库在`<utility>`中提供了一个有用的函数`std::move`，`std::move`并不能移动任何东西，**它唯一的功能是将一个左值强制转化为右值引用，继而可以通过右值引用使用该值，以用于移动语义**。从实现上讲，`std::move`基本等同于一个类型转换：
+>
+> ```c++
+> static_cast<T&&>(lvalue);
+> ```
+
+`左值、左值引用、右值、右值引用`
+
+> [C++ 11 左值，右值，左值引用，右值引用，std::move, std::foward](<https://blog.csdn.net/xiaolewennofollow/article/details/52559306>) 有例子
+>
+> 左值的声明符号为`&`， 为了和左值区分，右值的声明符号为`&&`
+>
+> **转移语义是和拷贝语义相对的**，可以类比文件的剪切与拷贝，当我们将文件从一个目录拷贝到另一个目录时，速度比剪切慢很多。
+>
+> ————————————————
+>
+> 这篇文章还说了右值引用的意义，真是对效率要求比较极致了。
+
+**移动语义完美转发？完美转发如何实现。**
+
+[[c++11]我理解的右值引用、移动语义和完美转发](https://www.jianshu.com/p/d19fc8447eaa)★
+
+移动语义一般用于临时右值，对于很庞大的类，生成右值构造一下，传入过去又拷贝构造一下。然后右值再析构，多不划算呀。直接在生成右值后将右值引用的指针传入过去（移动语义）这样更香。
+
+**emplace_back减少内存拷贝和移动**

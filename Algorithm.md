@@ -48,6 +48,7 @@ vector<vector<int>> threeSum(vector<int>& nums) {
                 else ans.push_back({nums[i],nums[s++],nums[e--]});
 
                 while(s > i + 1 && s < e && nums[s] == nums[s - 1]) ++s;
+                //20200816  |-> 一定是要向后比，而且不能包含i
                 while(s < e && e < n - 1 && nums[e] == nums[e + 1]) --e;
                 /*关键：
                 1. 要在使用过s和e之后考虑去重；
@@ -354,27 +355,51 @@ int kthSmallest(vector<vector<int>>& mtx, int k) {
 
 
 # Dynamic Programming
-[1. Reference Classification](https://zhuanlan.zhihu.com/p/126546914)
+[Reference Classification](https://zhuanlan.zhihu.com/p/126546914)
+
+
 
 ## `53. Maximum Subarray`
 连续子数组。Unexpectedly, dynamic programming came so fast, continuous sub-arrays.
 记得一开始是没想到动态规划的，一开始是想既然是连续子数组，那前缀和加双指针能解决。I remember that I didn't expect dynamic programming at the beginning. At the beginning, I thought that since it is a continuous subarray, the prefix and double pointers can be solved.
 为什么可以用动态规划，这个思想是最重要的。Why dynamic programming can be used is the most important idea.
 
+
+
 ## Array
 ### [1458. Max Dot Product of Two Subsequences](https://leetcode-cn.com/problems/max-dot-product-of-two-subsequences/)
 
+
+
 ## knapsack
-### [1449. Form Largest Integer With Digits That Add up to Target](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
-这个题本身不难，是明显的`完全背包`问题，但是边界条件怎么选是重点：This question is not difficult in itself, it is obviously a `complete knapsack` problem, but how to choose the boundary conditions is the key:
-1. 什么都不给，需要凑出一系列`target`是不可能的。Nothing is given, it is impossible to make a series of `target`. 
-2. 给了一堆数，凑出是`target = 0`是空。Gave a bunch of numbers, and it came out that `target = 0` is empty.
+#### [`879. 盈利计划`](https://leetcode-cn.com/problems/profitable-schemes/)
+
+三维的`0-1`背包问题。为什么是三维`dp`呢，对比一下背包问题：
+
+```shell
+#    第i件物品   |   代价Wi  |   价值Vi  |   容量V价值最大       |  
+#    第i项罪行   |   人员Gi  |   利润Pi  |   人员大于0价值大于P  |   
+```
+
+差距在最后一列，一个要求的是最大价值，一个要求的则是大于P的方案数。如果背包问题变成拿大于价值V的方案数，这两个就一样了。
+
+此外就是初始值的问题了。
+
+[`1449. Form Largest Integer With Digits That Add up to Target`](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
+
+这个题本身不难，是明显的`完全背包`问题，但是边界条件怎么选是重点：
+
+1. 什么都不给，需要凑出一系列`target`是不可能的。
+2. 给了一堆数，凑出是`target = 0`是空。
+
+
 
 
 ## Stock related 
 [Good reference](https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock/solution/yi-ge-fang-fa-tuan-mie-6-dao-gu-piao-wen-ti-by-l-3/)
 
-### `121. Best Time to Buy and Sell Stock`
+`121. Best Time to Buy and Sell Stock`
+
 感觉还是不是很清楚还需要多看看。I still don't feel very clear. I need to see more.
 ```cpp
 int maxProfit(vector<int>& prs) {
@@ -391,7 +416,8 @@ int maxProfit(vector<int>& prs) {
 
 初始化的时候虽然我写的也是`i`天，但其实是第`0`天啦。Although I wrote the `i` day during initialization, it was actually the` 0` day. 在第`0`天，持有股票是不可能事件，可以将这种情况设置为成本极高`-1e9`，不持有股票的成本是`0`。On the day of `0`, holding stocks is an impossible event. You can set this to an extremely high cost of` -1e9`, and the cost of not holding stocks is `0`.
 
-### `122. Best Time to Buy and Sell Stock II`
+`122. Best Time to Buy and Sell Stock II`
+
 没有交易次数限制就是减少一个维度 No limit on the number of transactions is to reduce one dimension
 ```cpp
 int maxProfit(vector<int>& prices) {
@@ -454,11 +480,21 @@ public:
 - 对于`1504`题，如果`D[i][j] == 3`那么，在遍历到`i,j`时，其能组成的矩阵个数就是`min(mn,D[i][j]) + pre`，当然此题还需要一个记录以`i,j`结尾的矩形的个数。
 - 对于`85`，则需要一个记录最大矩形的矩阵。
 
-## string
+## String
 
 [`139. 单词拆分`](https://leetcode-cn.com/problems/word-break/)& [`面试题 17.13. 恢复空格`](https://leetcode-cn.com/problems/re-space-lcci/)
 
-这两道题类似，都是用`dictionary`的单词尽可能匹配字符串的题目，`139`相对单调点，只需要说明是或者不是即可，`17.13`则要返回前端有多少不是的。需要注意的是要清楚`最大匹配个数`的概念，即不可拆分单词。
+这两道题类似，都是用`dictionary`的单词尽可能匹配字符串的题目，
+
+- `139`相对单调点，只需要说明是或者不是即可，
+
+- `17.13`则要返回前端有多少不是的。需要注意的是要清楚`最大匹配个数`的概念，即不可拆分单词。
+
+[`1143. 最长公共子序列`](https://leetcode-cn.com/problems/longest-common-subsequence/)
+
+这个题目还有正则表达式啊之类的题目，是很类似的，用记忆化递归可以，二维dp也可以。
+
+
 
 
 
@@ -566,11 +602,13 @@ I sloved it again [*6 May 2020*] with an error:
 `ll pow = (flag ? n : -(ll)n); // Attention`
 
 # Link
-## `21. Merge Two Sorted Lists`
-这个是基础，太重要了，必须快速、准确的写出代码。This is the foundation, which is too important. The code must be written quickly and accurately.
+[`21. Merge Two Sorted Lists`]()
+
+这个是基础，太重要了，必须快速、准确的写出代码。
 
 ## Two array or links
-[`2. Add Two Numbers`](https://leetcode-cn.com/problems/add-two-numbers/)  You can read more details
+[`2. Add Two Numbers`](https://leetcode-cn.com/problems/add-two-numbers/)
+
 [`88. Merge Sorted Array` ](https://leetcode-cn.com/problems/merge-sorted-array/)
 
 ## Ring
@@ -591,6 +629,8 @@ f 0|3 -> 4|2 -> 3|4 -> 2|3 -> 4|2 -> 3|4 ->
 ```
 
 ## Reverse
+
+[`24. 两两交换链表中的节点`](https://leetcode-cn.com/problems/swap-nodes-in-pairs/)
 
 [`206. Reverse Linked List`](https://leetcode-cn.com/problems/reverse-linked-list/)
 
@@ -650,15 +690,15 @@ ListNode* reverseBetween(ListNode* head, int m, int n) {
 # Pattern matching
 
 ## `28. Implement strStr()`
-此题就是KMP算法的实现，关键是理解KMP的思想，可能会有变种，比如之前做过一个树形匹配。This question is the realization of KMP algorithm, the key is to understand the idea of KMP, there may be variants, such as doing a tree match before.
+此题就是KMP算法的实现，关键是理解KMP的思想，可能会有变种，比如之前做过一个树形匹配。
 [参考：KMP 算法详解](https://leetcode-cn.com/problems/implement-strstr/solution/kmp-suan-fa-xiang-jie-by-labuladong/)
-KMP关键点是通过模式串的信息生成状态转换表，使得匹配串不至于退回。The Key point of KMP is to generate a state transition table through the information of the `pattern` string, so that the index of matching string `text` will not be returned.
+KMP关键点是通过模式串的信息生成状态转换表，使得匹配串不至于退回。
 
 # Martix index
 ## `48. Rotate Image`
-顺时针旋转矩阵，我记得我是直接找下标的规律，但是找的时间比较久。如何快速解决这些题目？Rotating the matrix clockwise, I remember I was looking directly for the rule of index, but it took longer to find.How to solve these problems quickly?
+顺时针旋转矩阵，我记得我是直接找下标的规律，但是找的时间比较久。如何快速解决这些题目？
 方案1 通过转置矩阵 Use Transpose matrix
-可以看到，转置之后行反转和列反转就能分别得到逆时针和顺时针的结果。It can be seen that after the transposition, the row inversion and column inversion can obtain the results of counterclockwise and clockwise, respectively.
+可以看到，转置之后行反转和列反转就能分别得到逆时针和顺时针的结果。
 
 ```
 a =                       | a.T                      |Counterclockwise rot90(a,1)|
@@ -673,8 +713,8 @@ array([[ 0,  1,  2,  3],  |array([[ 0,  4,  8, 12],  |array([[ 3,  7, 11, 15],  
                           |       [14, 10,  6,  2],
                           |       [15, 11,  7,  3]])
 ```
-方案2 如前序所述As mentioned in the preface
-类似的题目还有一个什么螺旋打印矩阵。There is a spiral printing matrix for a similar problem.
+方案2 如前序所述
+类似的题目还有一个什么螺旋打印矩阵。
 
 # Others
 ## `670. Maximum Swap`
@@ -719,11 +759,7 @@ maid 1 1 3 3
 
 ## Merge Sort
 
-[315. 计算右侧小于当前元素的个数](https://leetcode-cn.com/problems/count-of-smaller-numbers-after-self/) & [剑指 Offer 51. 数组中的逆序对](https://leetcode-cn.com/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)
-
-本质还是并归排序，看看递归和非递归咋写的。
-
-#### [148. 排序链表](https://leetcode-cn.com/problems/sort-list/) 链表并归 
+[`148. 排序链表`](https://leetcode-cn.com/problems/sort-list/) 链表并归 
 
 `Time complexity: O(nlogn), space complexity: O(1)`
 
@@ -784,13 +820,73 @@ public:
 };
 ```
 
+### Count
+
+这是用并归排序解决的一类问题，计数。计特定的数。
+
+[`315. 计算右侧小于当前元素的个数`](https://leetcode-cn.com/problems/count-of-smaller-numbers-after-self/) 
+
+
+
+[`剑指 Offer 51. 数组中的逆序对`](https://leetcode-cn.com/problems/shu-zu-zhong-de-ni-xu-dui-lcof/)
+
+
+
+[`327. 区间和的个数`](https://leetcode-cn.com/problems/count-of-range-sum/)
+
+这里是区间计数，因此需要`lower`和`upper`两个指针，记录一个区间，这里参考[题解](<https://leetcode-cn.com/problems/count-of-range-sum/solution/327qu-jian-he-de-ge-shu-ti-jie-zong-he-by-xu-yuan-/>)的分析方法：
+
+> ![](https://pic.leetcode-cn.com/768d122f4290de25219a2fc83167160afd05355f0bfc1552e0b1dfd3257f4012-file_1571325628054)
+>
+> ![](https://pic.leetcode-cn.com/bf057af098100994d5c7038b37fed4f77a4312337c741b6e2e979e4e1bc8eea2-file_1571325628056)
+>
+> 蓝色和黄色是上一轮`mergesort`的结果，已经记过数了。这里仅记录，黄色部分分别与蓝色部分的交集结果。
+>
+> 移动原则是：
+>
+> ```c++
+> while(Left <= M){
+>     while(Lower <= R && S[Lower] - S[Left] < low)Lower++;
+>     // 先移动左边的，只要不在区间内就一直向后找
+>     while(Upper <= R && S[Upper] - S[Left] <= up)Upper++;
+>     // 再移动右边的，只要在区间内就一直向后找
+>     cnt += Upper - Lower; // 此时upper恰好在区间外，因此不用加1
+>     Left++;
+> }
+> /*
+> 1. 为什么lower和upper不用回退？
+> 如上图，lower = -2, left = -1; -2 - -1 = -1 小于区间左边界0，而left的右边全部大于-1，带入公式只会离左边界越来越远；因此不用考虑当left = 0/7/9时，lower = -2的情况
+> 2. Upper - Lower 是否一直大于等于0？
+> 假设极端情况:low == up == 1;
+> */
+> ```
+>
+> 这个处理方法简直太优雅了。
+
+
+
 
 
 # Stack
-## `20. Valid Parentheses`
+
+[`20. Valid Parentheses`]()
+
 `Error 2` 写得不优雅就算了，上次被空串坑，这次又被`"["` 难倒了。哎
 Even if it is not elegant, the last time I was pitted by an empty string, this time I was stumped by `"["`.
 `Error 3` 用栈可以很优雅。Using the stack can be very elegant.但是也被坑了一次But also got pitted once `"]"` Be careful when pop from a stack!!
+
+[`84. 柱状图中最大的矩形`](https://leetcode-cn.com/problems/largest-rectangle-in-histogram/)
+
+```shell
+    0 1 2 3 4 5
+   [2,1,5,6,2,3] n = 6 | # 首先要清楚，这个矩形一定是已某一个值为高确定的
+LR: - - 1 2 1 4        | # 用一个数组记录，以当前i为val，左边最大的延申到哪，记录下标
+RL: 1 6 4 4 6 6        | # 同理还能记录右边的延申
+# 还有一个值得注意的是，相等的情况如何选择：比如测试用例 -> [1,1]
+# 因为相同的值挡不住你，因此可以继续。
+```
+
+
 
 
 
@@ -961,7 +1057,73 @@ public:
 
 [线段树详解 （原理，实现与应用）](https://www.cnblogs.com/AC-King/p/7789013.html)
 
+
+
+## 字典树
+
+[面试题 17.13. 恢复空格](https://leetcode-cn.com/problems/re-space-lcci/)
+
+> 这是一个字典树加动态规划的问题，这里关注一下字典树的细节
+>
+> ```shell
+>              a b c d e f g h i j k l m n o p q r s q u v w x y z
+> root->[val] [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]  | 查找"he"
+>         |                  | # 第一步now = root，并查找是否有'h'
+>         |                  |          a b c d e f g h i j k l...]  | 
+> 		false            DTree [val] [0,0,0,0,0,0,0,0,0,0,0,0...]  | 
+> 		                        |             |# 有'h' now = now->next[h] 并不是单词
+> 		                        |             |                    |
+> 							  false			DTree [val] [0]     |
+> 											        |# 再查找'e'，找到now = [e]
+> 													true       |# 此时now->ok == true
+> ```
+>
+> 因此遍历程序如下
+>
+> ```c++
+> class Solution {
+>     typedef struct dtree{
+>         bool ok;
+>         struct dtree *next[26];
+>         dtree():ok(false){
+>             for(int i = 0; i < 26; ++i) next[i] = nullptr;
+>         }
+>     }DTree;
+> public:
+>     int respace(vector<string>& dic, string sen) {
+>         DTree* root = new DTree;
+>         for(auto s: dic){
+>             DTree* now = root;
+>             for(int i = s.size() - 1; i >= 0; --i){
+>                 if(!now->next[s[i] - 'a']) now->next[s[i] - 'a'] = new DTree;
+>                 now = now->next[s[i] - 'a'];
+>             }
+>             now->ok = true;
+>         }
+> 		/*以上是构造树*/
+>         int n = sen.size();
+>         vector<int> dp(n + 1);
+>         for(int i = 0; i < n; ++i){
+>             dp[i + 1] = dp[i] + 1;
+>             int ok = 0;
+>             DTree* now = root;
+>             for(int j = i ; j >= 0; --j){//假设目前单词是eh
+>                 if(now->next[sen[j] - 'a']){// h 有| 则传递  <--> e也有 此时再传入 
+>                     now = now->next[sen[j] - 'a']; // 第二次传入后，now不是空，但now->next
+>                 }//全是空，now->ok == true;因此没有break;
+>                 else break;
+>                 //第一次判断，j是指向h的| 第二次j指向e <--> 而dp[i]的定义是以i-1结尾的单词所
+>                 if(now->ok) dp[i + 1] = min(dp[i + 1],dp[j]);//错过的数量，j指向e，恰好。
+>             }
+>         }
+>         return dp[n];
+>     }
+> };
+> ```
+>
 > 
+
+
 
 # Trouble
 
