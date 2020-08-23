@@ -341,6 +341,35 @@ int kthSmallest(vector<vector<int>>& mtx, int k) {
 
 事后分析，满足条件是分给左边即`e = m`，因为退出循环的时候一定是`s == e`，那么相等的情况分给左边就有可能取到等值。
 
+[`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/)
+
+这道题目用二分法其实更容易想。题目说，长度为`n + 1`的数组，元素内容是`[1,n]`但是其中只有一个重复的，但重复次数不一定。找到那个重复的数。
+
+用二分法的思想是，假设数组长这样`[1,3,4,2,2]`那么小于等于`2`的元素个数恰好大于`2`，代码如下：
+
+```c++
+int cnt = 0;
+int e = nums.size() - 1, s = 1, m = 0;
+while(s < e){
+    cnt = 0;
+    m = s + (e - s) / 2;
+    for(int n: nums) if(n <= m) cnt++;
+    if(cnt > m){
+        e = m;
+    }
+    else s = m + 1;
+}
+return s;
+```
+
+那么为什么小于等于`2`的元素个数恰好大于`2`呢？
+
+`[2,2,3,4]`不行嘛，还真不行，长度为`n + 1`这里显然不符合啊，最大值`4`长度也是`4`，所有要想符合，你还必须加一个1、2、3或者4，但是，加1、3、4就破坏了题目另一个限定条件`只有一个重复的元素`，加2又正好强化了2的个数大于2本身。所以这题真的设计很巧妙呀。
+
+
+
+
+
 # Design
 
 ## `146. LRU(Least Recently Used) Cache`
@@ -627,6 +656,8 @@ f 0|3 -> 4|2 -> 3|4 -> 2|3 -> 4|2 -> 3|4 ->
 
           |   <--  cycle  -->  | So There is no way to break the loop of while(s == f || nums[s] != nums[f]);
 ```
+
+这道题用二分法其实更好。
 
 ## Reverse
 
