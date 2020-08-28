@@ -1,11 +1,168 @@
 # TX-25927 -后台开发工程师
 
-程序在返回时崩溃？
+**服务器性能优化相关**
+
+> [服务器性能优化](<https://blog.csdn.net/zhangbijun1230/article/details/81607739>)
+>
+> 这篇文章写的很详细，可以用作参考指标。但目前：
+>
+> 1. 对应单机性能的分析，一般我们会将目光锁定在CPU和IO上，因为对于应用程序一般分为CPU bound型和IO bound型，即计算密集型或者读写密集型；至于内存，其性能因素往往也会反映到CPU或者IO上，因为内存的设计初衷就是提高内核指令和应用程序的读写性能。
+>    - 当内存不足，系统可能进行大量的交换操作，这时候磁盘可能成为瓶颈；
+>    - 而缺页、内存分配、释放、复制、内存地址空间映射等等问题又可能引起CPU的瓶颈；
+>
+> 性能优化并不是一个孤立的课题，除了响应时间的考虑，我们往往还需要综合功能性、完整性、安全性等等方面的问题。
+>
+> 以下针对服务器各个模块即相应工具进行具体阐述：CPU、内存、IO、文件系统。这是一个很系统的工程。慢慢来。
+
+**内存泄漏的类型、表现、检测**
+
+> [内存泄漏:百度百科](<https://baike.baidu.com/item/%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F?fr=ala0_1_1#>)
+>
+> 类型大概就4类，比如常发性、偶发性、一次性、隐式。
+>
+> 换个角度有：
+>
+> 1. 堆内存泄漏 （Heap leak）
+> 2. 系统资源泄露（Resource Leak）.主要指程序使用系统分配的资源比如 Bitmap,handle ,SOCKET等没有使用相应的函数释放掉，导致系统资源的浪费，严重可导致系统效能降低，系统运行不稳定。 
+>
+> 具体点，导致这样的行为有：
+>
+> 1. 不匹配使用new[] 和 delete[]
+> 2. delete void * 的指针，导致没有调用到对象的析构函数，析构的所有清理工作都没有去执行从而导致内存的泄露；
+> 3. 没有将基类的析构函数定义为虚函数
+>
+> 
+
+`vargrind`的参数。
+
+```shell
+$ valgrind --tool=memcheck --leak-check=full ./test
+```
+
+
+
+**崩溃的原因**
+
+1. 非法内存访问（空指针、数组越界等）
+2. 栈上申请大空间、或递归用尽。
+
+**程序在返回时崩溃？**
 
 > 返回时崩溃通常意味着您的函数会覆盖堆栈(因此返回地址)，并且您的程序会跳转到无处。您可以通过在反汇编级别逐步指令来验证这一点。
+>
+> 调用此函数的某个析构函数导致的崩溃。
 
-gdb调试多线程
+**设计高性能服务器**
 
-[gdb调试多线程程序总结](https://www.cnblogs.com/lsgxeva/p/8078670.html)
 
-> 
+
+**`gdb`调试多线程**
+
+> [gdb调试多线程程序总结](https://www.cnblogs.com/lsgxeva/p/8078670.html)
+
+
+
+
+
+**线程错乱线程锁**
+
+CPU满了如何定位。进程->线程->之后呢？
+
+
+
+**性能测试测什么**
+
+测时间。响应时间、处理时间等。
+
+负载。高并发的处理机制。
+
+**解决复杂问题？**
+
+
+
+# 特效图形图像工程师 — 抖音短视频
+
+```c++
+#include <stdio.h>
+
+class Base {
+public:
+    Base() {
+        printf("Base::Base\n");
+    }
+    ~Base() {
+        printf("Base::~Base\n");
+    }
+    void print1() {
+        printf("Base::print1\n");
+    }
+    virtual void print2() {
+        printf("Base::print2\n");
+    }
+};
+
+class Child: public Base {
+public:
+    Child() {
+        printf("Child::Child\n");
+    }
+    ~Child() {
+        printf("Child::~Child\n");
+    }
+    void print1() {
+        printf("Child::print1\n");
+    }
+    virtual void print2() {
+        printf("Child::print2\n");
+    }
+};
+
+int main() {
+    Child* child = new Child;// Base::Base\n Child::Child\n
+    Base* base = child; // 
+
+    child->print1(); // Child::print1
+    child->print2(); // Child::print2
+    base->print1(); // Base::print1
+    base->print2(); // Child::print2
+
+    cout << sizeof(Base) << endl;
+    
+    delete base; // Base::~Base\n
+
+    Child* child2 = nullptr;
+    child2->print1(); // segment default 
+    //child2->print2(); // 
+} // 
+```
+
+## 单例模式
+
+
+
+
+
+# `SDK`开发
+
+**构造函数调用虚函数，调用的是谁的？**
+
+是自己的呀。
+
+**如何判断一个数据类型？**
+
+`typeid(a) == tpyeid(int)?`
+
+**详细说下哪些基础类？**
+
+**兼容性，降低耦合度的手段？**
+
+**并发、同步怎么做的？**
+
+**生成者消费者模型说一下**
+
+**设计上的考虑，可扩展性呀，灵活性呀，生命周期啊这些的？**
+
+**多线程上，耗时不一样，如何优化。**
+
+**数据一致性问题**
+

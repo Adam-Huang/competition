@@ -70,7 +70,7 @@ rpm -e --nodeps mysql　　# 强力删除模式，如果使用上面命令删除
 > [解决mysql：ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO/YES)](https://www.cnblogs.com/winton-nfs/p/12956811.html)
 >
 > ```shell
-> mysql -uroot -p # 用这个就可以了
+> mysql -uroot -p # 用这个就可以了 e:123*
 > ```
 
 ## MySQL 管理

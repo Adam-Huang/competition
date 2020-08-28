@@ -1,7 +1,3 @@
-**A summary with Algorithm**
-旨在通过归纳总结做过的习题以及遇到的问题，抽象提炼以完善自身思维和代码能力。
-It aims at summarizing the exercises and problems encountered, and abstracting them to improve my thoughts and coding skills.
-
 # Array
 
 ## Analysis
@@ -12,12 +8,12 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 
 这个感觉真是不容易想到，从表达式出发`A[i] + A[j] + i - j`看成`A[i] + i`和`A[j] - j`的和，维护一个其中的最大值即可。说难吧，也不难，但是为啥就是想不到呢？
 
-[`134. 加油站`](https://leetcode-cn.com/problems/gas-station/)
+### [134. 加油站](https://leetcode-cn.com/problems/gas-station/)
 
 这个题关键是明白：如果A站不能到B站，那么A，B之间到任何一个站都不能到B站。
 
 ## Trapping rain water
-- [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。It is related to rainwater, because it is the amount of rainwater determined by the short side, so you only need to move the short side each time.
+- [`42. Trapping Rain Water`](https://leetcode-cn.com/problems/trapping-rain-water/)接雨水相关的，因为是短边决定的雨水量，因此每次只移动短边即可。
 
 ## 寻找重复或消失
 此类问题有一个最典型的特点就是数组中数字范围为：`[1,n]`其中`n`是数组长度：
@@ -35,32 +31,96 @@ It aims at summarizing the exercises and problems encountered, and abstracting t
 
 ```c++
 vector<vector<int>> threeSum(vector<int>& nums) {
-        vector<vector<int>> ans;
-        sort(nums.begin(),nums.end());
-        int n = nums.size();
-        for(int i = 0; i < n; ++i){
-            while(i > 0 && i < n && nums[i] == nums[i - 1]) ++i; /*若相同则过滤*/
-            int s = i + 1, e = n - 1;
-            while(s < e){
-                int now = nums[i] + nums[s] + nums[e];
-                if(now > 0) --e;
-                else if(now < 0) ++s;
-                else ans.push_back({nums[i],nums[s++],nums[e--]});
+    vector<vector<int>> ans;
+    sort(nums.begin(),nums.end());
+    int n = nums.size();
+    for(int i = 0; i < n; ++i){
+        while(i > 0 && i < n && nums[i] == nums[i - 1]) ++i; /*若相同则过滤*/
+        int s = i + 1, e = n - 1;
+        while(s < e){
+            int now = nums[i] + nums[s] + nums[e];
+            if(now > 0) --e;
+            else if(now < 0) ++s;
+            else ans.push_back({nums[i],nums[s++],nums[e--]});
 
-                while(s > i + 1 && s < e && nums[s] == nums[s - 1]) ++s;
-                //20200816  |-> 一定是要向后比，而且不能包含i
-                while(s < e && e < n - 1 && nums[e] == nums[e + 1]) --e;
-                /*关键：
+            while(s > i + 1 && s < e && nums[s] == nums[s - 1]) ++s;
+            //20200816  |-> 一定是要向后比，而且不能包含i
+            while(s < e && e < n - 1 && nums[e] == nums[e + 1]) --e;
+            /*关键：
                 1. 要在使用过s和e之后考虑去重；
                 2. 要考虑这次的s或e是否与最近一次使用的相同，相同则过滤；
                 3. 因为是向后比较（s & s - 1）（e & e + 1）因此退出条件是s < e*/
-            }
         }
-        return ans;
     }
+    return ans;
+}
 ```
 
 按照上述逻辑，其实4数之和也是一样的。
+
+### [491. 递增子序列](https://leetcode-cn.com/problems/increasing-subsequences/)
+
+这题是回溯，其关键也是去重，但是不能用类似上述的`while`循环用`set`，因为：**这个数据没有经过排序！相同的数据并不是一定在一起的，所以用`set`**
+
+
+
+## 下标映射
+
+### [189. 旋转数组](https://leetcode-cn.com/problems/rotate-array/)
+
+题目要求，将数组原地右移`k`位，可以分析出移动规律为：`A[i]->A[(i + k) % n]`这个映射关系不难，问题是如何避免死循环？
+
+![](https://pic.leetcode-cn.com/f0493a97cdb7bc46b37306ca14e555451496f9f9c21effcad8517a81a26f30d6-image.png)
+
+[这有一个比较好的题解](<https://leetcode-cn.com/problems/rotate-array/solution/xuan-zhuan-shu-zu-yuan-di-huan-wei-xiang-xi-tu-jie/>)。简单来说两步：1.记录出发时的位置，回头时跳出循环；2. 记录交换过的点，满足`n`这跳出整体的循环。
+
+![](https://pic.leetcode-cn.com/ffdad22d3d8e615e889cbfa8d60a51f207a8eab1926416723a9594b7d3774cb0-%E5%9B%BE%E7%89%87.png)
+
+```c++
+void rotate(vector<int>& nums, int k) {
+    k = k % nums.size();
+    int count = 0;
+    for (int start = 0; count < nums.size(); start++) {
+        int current = start;
+        int prev = nums[start];
+        do {
+            int next = (current + k) % nums.size();
+            int temp = nums[next];
+            nums[next] = prev;
+            prev = temp;
+            current = next;
+            count++;
+        } while (start != current);
+    }
+}
+```
+
+
+
+## 使数组相等
+
+### [1558. 得到目标数组的最少函数调用次数](https://leetcode-cn.com/problems/minimum-numbers-of-function-calls-to-make-target-array/)
+
+题目给一个全`0`数组`arr = [0,0,0,0]`要求两种操作`+1`和`/2`，如何最短的步骤到达`nums = [1,2,4,9]`
+
+我参考了[video: 题解](<https://www.bilibili.com/video/BV15T4y1L7Cz?p=4>)给出两种方案，但需要把题目反过来，如何从给定的`nums`映射成`arr`？
+
+1. 循环，对于奇数，那没办法只能先减一；对于偶数可以全部除以2
+
+2. 从二进制角度分析呢，减一就是将末尾的`1`变成`0`，除以2呢，就是右移一位，而一个数，需要减多少次1就是二进制里1的个数，举个例子：
+
+   ```shell
+   10: 1010 -> 0000 # 需要 -> 右移 -> 0101 -> 减一 -> 0100 -> 右移两次 -> 0001 -> 减一
+   ```
+
+   还有函数
+
+   ```c++
+   __builtin_popcount(x); // 据说是个宏，能方便的统计二进制中1的个数
+   __builtin_clz(x); //就是数一数这个数二进制前导有多少个零，clz: count leading zero 
+   ```
+
+
 
 
 # Back Tracking
@@ -208,8 +268,9 @@ I. 统计各数字在`bit`位上出现的次数，这个思路要有。Count the
 II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how to use the 32-bit own rule record
 
 # Binary
-[`1461. 检查一个字符串是否包含所有长度为 K 的二进制子串`](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/)
+## [1461. 检查一个字符串是否包含所有长度为 K 的二进制子串](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/)
 这题一开始也不会做，没有理解二进制的特点呀！！
+
 - [哈希表中存字符串，时间复杂度不是 O(n)，真正的 O(n) 解在这里。](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/solution/ha-xi-biao-zhong-cun-zi-fu-chuan-shi-jian-fu-za-du/)这个题解写的真好。
 
 # Binary serach
@@ -316,36 +377,36 @@ Error2:
 **或者：**
 初始化为：`int s = 0, e = r * c - 1`，判别为：`while(s <= e)`，但是要注意，更新右值时使用：`e = m - 1;`否则：`[[1,1]] target = 0` endless Loop.
 
-[378. 有序矩阵中第K小的元素](https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/)
+## [378. 有序矩阵中第K小的元素](https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/)
 
 这个题用二分法的时候还是有很多需要注意的地方的。
 因为虽然对值二分，但是最终需要这个值是刚好`<=`左边界。但是为了避免死循环e和s的取值方法不变，变的就是当值相等的时候，是左边还是查找左边还是右边？
 
 ```c++
 int kthSmallest(vector<vector<int>>& mtx, int k) {
-        int n = mtx.size();
-        int s = mtx[0][0], e = mtx[n - 1][n - 1], m = 0;
-        while(s < e){
-            m = s + ( e - s ) / 2;
-            int smt = 0, c = 0;
-            for(int i = n - 1; i >= 0; --i){
-                while(c < n && mtx[i][c] <= m) ++c;
-                smt += c;
-            }
-            if(smt >= k) e = m;
-            else s = m + 1;
+    int n = mtx.size();
+    int s = mtx[0][0], e = mtx[n - 1][n - 1], m = 0;
+    while(s < e){
+        m = s + ( e - s ) / 2;
+        int smt = 0, c = 0;
+        for(int i = n - 1; i >= 0; --i){
+            while(c < n && mtx[i][c] <= m) ++c;
+            smt += c;
         }
-        return s;
+        if(smt >= k) e = m;
+        else s = m + 1;
     }
+    return s;
+}
 ```
 
 事后分析，满足条件是分给左边即`e = m`，因为退出循环的时候一定是`s == e`，那么相等的情况分给左边就有可能取到等值。
 
-[`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/)
+## [287. Find the Duplicate Number](https://leetcode-cn.com/problems/find-the-duplicate-number/)
 
 这道题目用二分法其实更容易想。题目说，长度为`n + 1`的数组，元素内容是`[1,n]`但是其中只有一个重复的，但重复次数不一定。找到那个重复的数。
 
-用二分法的思想是，假设数组长这样`[1,3,4,2,2]`那么小于等于`2`的元素个数恰好大于`2`，代码如下：
+用二分法的思想是，假设数组长这样`[1,3,4,2,2]`**那么小于等于`2`的元素个数恰好大于`2`**，代码如下：
 
 ```c++
 int cnt = 0;
@@ -372,15 +433,23 @@ return s;
 
 # Design
 
-## `146. LRU(Least Recently Used) Cache`
+## 146. LRU(Least Recently Used) Cache
 **错了几次，过一段时间再写写看。**
+
+## [380. 常数时间插入、删除和获取随机元素](https://leetcode-cn.com/problems/insert-delete-getrandom-o1/)
+
+三个函数`insert`、`remove`、`getRandom`时间复杂度全部要求`O(1)`；`insert`和`remove`可以用`unordered_set`，但是怎么`getRandom`呢？这里有个非常巧妙的设计，加上一个`vector`，怎么用呢？可以在`remove`的时候将最后的元素弹出，当然了，弹出前将其放在原来的位置。
+
+![](https://imgconvert.csdnimg.cn/aHR0cHM6Ly9waWMubGVldGNvZGUtY24uY29tL0ZpZ3VyZXMvMzgwL2RlbGV0ZS5wbmc?x-oss-process=image/format,png)
+
+真的是很巧妙啊。
 
 # Double pointers
 ## fast & slow
 [`80. 删除排序数组中的重复项 II`](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array-ii/)
 
 
-## [355. Design Twitter](https://leetcode-cn.com/problems/design-twitter/)
+## [](https://leetcode-cn.com/problems/design-twitter/)
 
 
 # Dynamic Programming
@@ -401,7 +470,12 @@ return s;
 
 
 ## knapsack
-#### [`879. 盈利计划`](https://leetcode-cn.com/problems/profitable-schemes/)
+
+### [279. 完全平方数](https://leetcode-cn.com/problems/perfect-squares/) [322. 零钱兑换](https://leetcode-cn.com/problems/coin-change/)
+
+这两个算是完全背包问题了吧，好奇怪，感觉不一定需要二维`dp`都是一维的就可以。
+
+### [879. 盈利计划](https://leetcode-cn.com/problems/profitable-schemes/)
 
 三维的`0-1`背包问题。为什么是三维`dp`呢，对比一下背包问题：
 
@@ -414,7 +488,7 @@ return s;
 
 此外就是初始值的问题了。
 
-[`1449. Form Largest Integer With Digits That Add up to Target`](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
+### [1449. Form Largest Integer With Digits That Add up to Target](https://leetcode-cn.com/problems/form-largest-integer-with-digits-that-add-up-to-target/)
 
 这个题本身不难，是明显的`完全背包`问题，但是边界条件怎么选是重点：
 
@@ -462,6 +536,7 @@ int maxProfit(vector<int>& prices) {
 ## 掷骰子
 
 [`837. 新21点`](https://leetcode-cn.com/problems/new-21-game/)虽然不是掷骰子，但是很想，得分是`1~W`求得分在大于等于`K`时小于`N`的概率。时间复杂度要求较高，关键还是能准确的推出递推公式。可以用类似前缀和的思想优化之。
+
  - [反推的代表，官方题解](https://leetcode-cn.com/problems/new-21-game/solution/xin-21dian-by-leetcode-solution/)
  - 正推的代表在官解的评论中，如下：
 ```cpp
@@ -602,7 +677,16 @@ public:
 };
 ```
 
+
+
+## 并查集
+
+### [1559. 二维网格图中探测环](https://leetcode-cn.com/problems/detect-cycles-in-2d-grid/)
+
+用并查集能维护一个连通性。这题就是。
+
 # Greedy
+
 以跳跃游戏为例，是贪心算法。如何从题目中分离出是贪心算法才是关键。Take the jump game as an example, it is a greedy algorithm.How to separate from the problem is the greedy algorithm is the key. 此外还有一些细节需要考虑：There are also some details to consider:
 1. 跳（动作）、在一个范围内搜索、选择下一次跳跃点（同时也会确定下一次搜索范围）是三个分开的过程。Jumping (the action), searching within a range, and selecting the next jump point (also determining the next search range) are three separate processes. 保险起见，一开始可以申请尽可能多的变量，以免死循环。For insurance purposes, you can apply for as many variables as possible to avoid endless loops.
 
@@ -641,7 +725,7 @@ I sloved it again [*6 May 2020*] with an error:
 [`88. Merge Sorted Array` ](https://leetcode-cn.com/problems/merge-sorted-array/)
 
 ## Ring
-[`287. Find the Duplicate Number`](https://leetcode-cn.com/problems/find-the-duplicate-number/) & 
+### [287. Find the Duplicate Number](https://leetcode-cn.com/problems/find-the-duplicate-number/)
 抽象一层来分析这个题目，如何想到是快慢指针，如何与环联系思考？
 首先限定时间复杂度`O(n^2)`以下，要么`O(nlogn)`，要么是`O(n)`；
 数字值域为`[1,n]`，重复次数不定。展开看确实像一个链表，如下图`s`指示：
@@ -657,7 +741,7 @@ f 0|3 -> 4|2 -> 3|4 -> 2|3 -> 4|2 -> 3|4 ->
           |   <--  cycle  -->  | So There is no way to break the loop of while(s == f || nums[s] != nums[f]);
 ```
 
-这道题用二分法其实更好。
+这道题用二分法其实更容易想到。
 
 ## Reverse
 
@@ -784,7 +868,43 @@ maid 1 1 3 3
 
 ## 3-ways-patition
 
-上面那题，还有一个荷兰国旗题都是关于这个`3-ways-patiton`算法的。
+上面那题，还有一个[75. 颜色分类](https://leetcode-cn.com/problems/sort-colors/)都是关于这个`3-ways-patiton`算法的。
+
+```c++
+int s = 0, cur = 0, e = nums.size() - 1;
+while(cur <= e){ // Detail 3: cur 相等时也要判断一次
+    if(nums[cur] > std) swap(nums[cur],nums[e--]); // Detail 1:
+    // 与e--比较时，cur不自加；因为有可能当前的nums[e]也是大于std的，cur自加的话会错过：
+    // [2,0,1,2] -> [2,0,1,2] 
+    //  |     |      |   |
+    // cur    e     cur  e
+    else if(nums[cur] < std) swap(nums[s++],nums[cur++]); // Detail 2:
+    // 为什么与s端交换时就需要自加呢？本质是因为cur设置成和s一起从0出发的， cur一定不会比s慢，而s过的都是验证过的，如果有一次cur不自加，不就有可能cur 比s慢了嘛。
+    else ++cur;
+}
+```
+
+三路排序可以在线性时间内将数组分成三个部分，左边都是小于`std`的，与`std`相等的在中间，右边都是大于`std`的。看起来好像比快速排序要好一点。
+
+```c++
+void quicksort(vector<int>& num, int start , int end){
+    if(start >= end) return;
+    int s = start, e = end;
+    int i = start + rand() % (e - s + 1);
+    swap(num[i],num[s]);
+    int std = num[s];
+    while(s < e){
+        while(s < e && num[e] >= std) --e;
+        if(s < e) num[s++] = num[e];
+        //快排的思想就是找一个标准，将大于的放右边，小于的放左边，不关心是否能将相等的放中间。
+        while(s < e && num[s] < std) ++s;
+        if(s < e) num[e--] = num[s];
+    }
+    num[s] = std;
+    quicksort(num,start,s - 1);
+    quicksort(num,s + 1,end);
+}
+```
 
 
 
@@ -856,6 +976,46 @@ public:
 这是用并归排序解决的一类问题，计数。计特定的数。
 
 [`315. 计算右侧小于当前元素的个数`](https://leetcode-cn.com/problems/count-of-smaller-numbers-after-self/) 
+
+```c++
+class Solution {
+	vector<int> num;
+	void merge(vector<int> &idx, int s, int e, vector<int> &ans) {
+		if (s >= e) return;
+
+		int m = s + (e - s) / 2;
+		merge(idx, s, m, ans);
+		merge(idx, m + 1, e, ans);
+
+		vector<int> idt = idx;
+		int i = s, j = m + 1, it = s;
+		while (i <= m && j <= e) {
+			if (num[idx[i]] <= num[idx[j]]) {
+				idt[it++] = idx[j++];
+			}
+			else {
+                ans[idx[i]] += (e - j + 1);
+				idt[it++] = idx[i++];
+			}
+		}
+
+		while (i <= m) { idt[it++] = idx[i++]; }
+		while (j <= e) { idt[it++] = idx[j++]; }
+
+		idx = move(idt);
+	}
+public:
+	vector<int> countSmaller(vector<int>& nums) {
+		int n = nums.size();
+		this->num = nums;
+		vector<int> ans(n);
+		vector<int> idx(n);
+		for (int i = 0; i < n; ++i) idx[i] = i;
+		merge(idx, 0, n - 1, ans);
+		return ans;
+	}
+};
+```
 
 
 
@@ -1165,4 +1325,10 @@ public:
 
 
 # Two pointers
+
+
+
+
+
+
 
