@@ -7,7 +7,12 @@
 
 # C/C++
 
-## const
+**C++和C的区别**
+
+- 设计思想：C++是面向对象的语言，而C是面向过程的结构化编程语言
+- 语法：C++具有封装、继承和多态三种特性；C++相比C，增加多许多类型安全的功能，比如强制类型转换；C++支持范式编程，比如模板类、函数模板等
+
+## `const`
 
 `const & constexpr`
 
@@ -22,34 +27,47 @@
 > `const`修饰的量不是常量，仅仅是个只读量。在编译的时候全部替换`const`变量被赋予的值（这点和C语言的宏相似），在运行的时候该`const`变量可通过内存进行修改。
 >
 > - 通过内存(指针)可以修改位于栈区的`const`变量，语法合乎规定，编译运行不会报错，但是在编译的时候所有用到该常量的地方全部被替换成了定义时所赋予的值，然后再运行的时候无法使用通过指针修改后的值。
-> - 通过内存(指针)修改位于静态存储区的的const变量，语法上没有报错，编译不会出错，一旦运行就会报告异常。
+> - 通过内存(指针)修改位于静态存储区的的`const`变量，语法上没有报错，编译不会出错，一旦运行就会报告异常。
 >
 > ```c++
+> #include <iostream>
+> using namespace std;
+> 
 > const int a = 1;
-> void test1()
+> int main()
 > {
->  const int c = 3;
->  int* p = (int*)& c; /*用c++的const_cast呢？*/
->  *p = 4;
->  //在编译的时候c被替换成了3，无法使用通过内存修改后的值
->  //*p表示c被修改后的值
->  cout << c << " " << *p << endl; // 3 4
->  
->  p = (int*)& a;
->  //在编译的时候a被替换成了1，p指向a的地址
->  cout << a << " " << *p << endl;
->  //修改位于静态存储区的const变量，编译无错，运行就会报异常
->  *p = 4;
->  //a的值还是1，因为在编译的时候字母a就被替换成1了，运行时会报异常
->  cout << a << endl;
+>     const int c = 3;
+>     int* p = (int*)& c; /*用c++的const_cast呢？*/
+>     *p = 4;
+>     //在编译的时候c被替换成了3，无法使用通过内存修改后的值
+>     //*p表示c被修改后的值
+>     cout << c << " " << *p << endl; // 3 4
+>     cout << &c << " " << p << endl; //栈区
+> 
+>     p = (int*)& a;
+>     //在编译的时候a被替换成了1，p指向a的地址
+>     cout << a << " " << *p << endl;
+>     cout << &a << " " << p << endl; // 常量区
+>     //修改位于静态存储区的const变量，编译无错，运行就会报异常
+>     *p = 4;
+>     //a的值还是1，因为在编译的时候字母a就被替换成1了，运行时未报异常，但修改也不成功。有些编译器就报异常了？
+>     cout << a << " " << *p << endl;
+>     cout << &a << " " << p << endl;
+>     return 0;
 > }
 > ```
 >
 > 
 
+### 如何修改const变量的值
+
+像上面那种算是一种方法嘛？够呛。因为真正的`const`变量的值并没有被修改。要想修改还得靠`volatile`。[如何修改const变量、const与volatile](https://blog.csdn.net/heyabo/article/details/8745942)
 
 
-## 多态
+
+## 类 
+
+**多态**
 
 多态的实现主要分为静态多态和动态多态，
 
@@ -332,7 +350,9 @@ int main()
   ```
 
 - `Key 3`: 这里打印的是临时变量`vtbl`在栈的地址，其实没多大意义。
+
 - `Key 4`: 首先父类是虚的，子类一定是虚的，加不加`virtual`都一样；其次，表的地址不一样但是未重载的函数地址是一样的，且函数地址空间很低（和windows下的不一样，可能是因为windows下给的进程内存不一样？）。
+
 - `Key 5`: 虽然打印来打是输出了`Second`类的函数和函数地址，但是不能保证所有的`Son::func1`都是这个输出，之所以这样输出函数因为`Son`首先继承了`Second`类，`Second`的虚表位置低。
 
 
@@ -340,6 +360,8 @@ int main()
 #### 虚函数与纯虚函数的区别
 
 > [虚函数与纯虚函数的区别](<https://blog.csdn.net/qq_40840459/article/details/82351726>)
+>
+> **纯虚函数只是一个接口，是个函数的声明而已，它要留到子类里去实现。不能被直接调用！**
 
 #### 构造函数不可以是虚函数
 
@@ -361,9 +383,331 @@ C++里什么样的函数不能重载？
 
 > 析构函数无形参，不能重载！
 
-## 类 
+### 如果子类重写的函数不是父类的虚函数会怎么样？还有多态嘛？
 
-### 不能被继承
+这本质上是重载、重写和重定义（隐藏）的区别，可参考[C++继承中重载、重写、重定义的区别：](https://www.cnblogs.com/weizhixiang/articles/5760286.html)
+
+**简而言之，只要参数不同就是重载，参数相同，就看是不是虚函数，是虚函数，就是重写，不是，就是重定义。**
+
+```c++
+#include <bits/stdc++.h>
+
+class Base {
+private:
+    virtual void display() { cout<<"Base display()"<<endl; }
+    void say(){ cout<<"Base say()"<<endl; }
+public:
+    void exec(){ display(); say(); }
+    void f1(string a) { cout<<"Base f1(string)"<<endl; }
+    void f1(int a) { cout<<"Base f1(int)"<<endl; } //overload，两个f1函数在Base类的内部被重载
+};
+
+class DeriveA:public Base{
+public:
+    void display() { cout<<"DeriveA display()"<<endl; } //override，基类中display为虚函数，故此处为重写
+    void f1(int a,int b) { cout<<"DeriveA f1(int,int)"<<endl; } //redefining，f1函数在Base类中不为虚函数，故此处为重定义
+    void say() { cout<<"DeriveA say()"<<endl; } //redefining，同上
+};
+
+
+class DeriveB:public Base
+{
+public:
+    void f1(int a) { cout<<"DeriveB f1(int)"<<endl; } //redefining，重定义
+};
+
+
+int main(){
+    DeriveA a;
+    Base *b=&a;
+    b->exec(); //display():version of DeriveA call(polymorphism) 
+    //say():version of Base called(allways )b里边的函数display被A类覆盖，但是say还是自己的。
+
+    a.exec(); //same result as last statement   
+    a.say();
+    DeriveB c;
+    c.f1(1); //version of DeriveB called
+}
+```
+
+### 子类构造函数调用基类重载函数
+
+结论，自己的
+
+```c++
+#include  <bits/stdc++.h> 
+ 
+using namespace std;
+
+class Base{
+public:
+    Base(){ cout << "Base constructor ++ " << endl; }
+    ~Base(){ cout << "Base destructor -- " << endl; }
+    virtual void T(){ cout << "Base T ++ " << endl; }
+};
+
+class A: public Base
+{
+public:
+    A()	{ T(); cout << "A construct ++" << endl; }
+    ~A(){ cout << "A destructor --" << endl; }
+    void T(){ cout << "A T ++ " << endl; }// 无论这里加不加virtual 都是调用 A T ++
+private:
+    int m_a; 
+};
+
+int main()
+{
+    A a;
+	return 0;
+}
+```
+
+### 构造函数
+
+#### 没有构造函数会怎么样
+
+目前实验情况，
+
+1. 对于`B b`和`B *b = new B;`无括号的这两种情况：除了类里有`bool`类型时会编译不过以外，其余基础数据结构都会显示一个随机值。
+2. `B *b = new B()`还真就将所有的默认值全部设置为0了！
+
+```c++
+#include <iostream>
+using namespace std;
+
+class B
+{
+public:
+    // bool bT; // bool 类型会编译错； 但是用new B()带括号版本就可以正常初始化
+    // long long bT; // long long 随机值
+    int b; // 随机值
+    // char bT;// char 被初始化为0 '\0'
+    double bT; // 随机值
+};
+int main()
+{
+    B b;    //编译至此时，编译器将为B合成默认构造函数
+    cout << b.b <<" - "  << b.bT << endl;
+    
+    B *t = new B;
+    cout << t->b << " - " << t->bT << endl;
+    delete t;
+    // B *p = new B();
+    // cout << p->b << " - " << p->bT << endl;
+    return 0;
+}
+```
+
+
+
+#### 合成的默认构造函数
+
+[编译器生成“合成默认构造函数'的情况总结](https://www.cnblogs.com/SunShine-gzw/p/13571891.html)
+
+1. 合成默认构造函数总是不初始化【类的内置类型】及【复合类型】的数据成员；
+2. 分清楚默认构造函数被程序需要与被编译器需要，**只有被编译器需要的默认构造函数，编译器才会合成它**
+
+**何时默认构造函数才会被编译器需要？**
+
+1. **含有类对象数据成员，该类对象类型有默认构造函数。** -- 我认为这就类似于你再栈上用语句`A a;`申请一个对象一样，当然会调用`A`的默认构造函数，能说是因为继承于`A`的`B`实现了一个`B::B(){ A:A(); }`嘛？有些牵强吧。但是无论你怎么理解，他就是这么一个现象。
+2. **基类带有默认构造函数的派生类** -- 那派生类有没有构造函数？
+3. **带有虚函数的类　** -- 这个我信， 要有虚表一定是编译器需要的。
+4. **带有虚基类**
+5. **定义成员变量时赋初值** 是C++11引入的
+
+#### 拷贝构造函数
+
+##### 调用时机
+
+[C++拷贝构造函数被调用的时机](<https://blog.csdn.net/s_lisheng/article/details/72842611>) **注意`A c=a;`与`d=a;`的不同，一个是初始化，一个是赋值。**
+
+拷贝构造函数调用的几种情况：
+
+1. 当用类的一个对象去初始化该类的另一个对象（或引用）时系统自动调用拷贝构造函数实现拷贝赋值。
+2. 若函数的形参为类对象，调用函数时，实参赋值给形参，系统自动调用拷贝构造函数。（这里可有可能被编译器优化）
+3. 当函数的返回值是类对象时，系统自动调用拷贝构造函数。（注意会有编译器可能会进行优化，而观察不到拷贝的发生）
+
+##### 深浅拷贝之分
+
+可以简单的理解合成拷贝构造函数就是一个值复制的过程，类里有`int`就复制`int`的值，从这个角度上说，两个类里的`int`互相独立，好像是深拷贝。但是呢，如果是指针就不太好了`int *`拷贝之后，指向的地址是一样的，你说惨不惨。
+
+因此，**一般一个类里有指针变量的话，就要手写一个拷贝构造函数**
+
+##### explict
+
+就是告诉编译器，要以显性的方式调用构造函数（默认、拷贝）。什么叫显性呢？先举几个隐性的例子吧：
+
+```c++
+class Test{
+public:
+    int data;
+    Test(int d):data(d){// explicit 开头这个程序就错了。
+        cout << "C:" << this << " -> " << data << endl;
+    }
+};
+int main(){
+    Test t = 100;
+}
+```
+
+```c++
+class Test{
+    public:
+    Test(){}
+    //拷贝构造函数
+    explicit Test(const Test &t){
+        cout << "in copy" << endl;
+        data = t.data;
+    }
+    int getData(){
+        return data;
+    }
+    private:
+    int data;
+};
+void test(Test x){
+
+}
+int main(){
+    Test t1;
+    Test t2(t1);//由于是显式调用拷贝构造函数，所以编译过
+    //Test t3 = t2;//由于是隐式调用拷贝构造函数，所以编译不过
+    //test(t2);//由于是隐式调用拷贝构造函数，所以编译不过
+}
+```
+
+所以什么是显性呢？显性调用就是中规中矩的调用，不让编译器自己优化。隐形就是编译器默默的将你写错的一些语法修正过来。
+
+从上面的代码中还可以看到，**调用函数时，实参传递给形参时，用的应该是类似于`Test t3 = t2`的拷贝构造函数**，这也说明了为什么拷贝构造函数的参数要用`&`修饰。
+
+#### 移动构造函数
+
+
+
+
+
+### 继承
+
+#### 虚继承
+
+> [C++虚继承和虚基类详解](<http://c.biancheng.net/view/2280.html>)
+>
+> 为了解决多继承时的命名冲突和冗余数据问题，[C++](http://c.biancheng.net/cplus/) 提出了虚继承，使得在派生类中只保留一份间接基类的成员。
+>
+> 虚继承的目的是让某个类做出声明，承诺愿意共享它的基类。其中，这个被共享的基类就称为虚基类（Virtual Base Class），本例中的 A 就是一个虚基类。在这种机制下，不论虚基类在继承体系中出现了多少次，在派生类中都只包含一份虚基类的成员。
+>
+> ```c++
+> #include <iostream>
+> using namespace std;
+> 
+> class X  { public: int i; };
+> class A : public virtual X{ public:int j; };
+> class B : public virtual X{ public:double d; };
+> class C : public A, public B{ public: int k; };
+> 
+> void function1(A *pa)
+> {
+>     pa->i = 1000;
+> }
+> int main()
+> {
+>     A *a= new A();
+>     C *c= new C();
+>     cout << a->i << " | " << c->A::i << " - " << c->B::i << endl; // 0 | 0 - 0
+>     c->A::i = 9;
+>     cout << a->i << " | " << c->A::i << " - " << c->B::i << endl; // 0 | 9 - 9 因为是虚继承，因此他俩用的同一个内存空间
+>     function1(a);  //关注重点在这里
+>     cout << a->i << " | " << c->A::i << " - " << c->B::i << endl; // 1000 | 9 - 9
+>     function1(c);     //关注重点在这里
+>     cout << a->i << " | " << c->A::i << " - " << c->B::i << endl; // 1000 | 1000 - 1000
+>     return 0;
+> }
+> ```
+
+##### 虚继承有虚表嘛
+
+- 首先，即使这里没有虚函数，这个虚继承也是有虚表的；
+- 其次，继承自两个父亲的儿子，就有两个虚表；老样子，谁先继承，谁的虚表就在内存的低地址上
+- 再则，如何实现共享爷爷的变量的呢？就是在父亲内存的后面申请一块爷爷变量的内存，这样，爷爷内存就只有一份了。
+
+```shell
++--------------------------------+ <- *a   0x602000000010
+|            vptr                | 8位虚表
++--------------------------------+ <- a->j 0x602000000018 | 0x60200000001c
+| a->j 4位int  |   a->i 4位int   |             '子类'      |     '基类'
++--------------------------------+ # 基类的i居然排在了子类的j后面！
+
++--------------------------------+ <- *c   0x604000000090
+|            A的vptr             | 8位虚表
++--------------------------------+ <- c->j 0x604000000098 |  
+| c->j 4位int  |       '空了'     |
++--------------------------------+ <-      0x6040000000a0
+|            B的vptr             | 8位虚表
++--------------------------------+ <- c->d 0x6040000000a8 | 0x6040000000ac
+| c->d 4位int  |   c->k 4位int   |              '二父'     |    '子类'
++--------------------------------+ <- c->i 0x6040000000b0
+| c->i 4位int  |     '空了'      |              '爷爷'     |
++--------------------------------+
+
+# --------------以上是虚继承的内存分布，下面看看无虚函数、无虚继承时的菱形继承------------------
+
++--------------------------------+ <- a1/a1->i 0x602000000030 | 0x602000000034
+| a->i 4位int  |   a->j 4位int   |                '基类'       |     '子类'
++--------------------------------+ # 排列整齐，先后明白
+
++--------------------------------+ <- c1/c1->A1::i 0x603000000010 | 0x603000000014
+|c1->A1::i 4位int|  c1->j 4位int |                     '基类'      |
++--------------------------------+ <-    c1->B1::i 0x603000000018 | 0x60300000001c
+|c1->B1::i 4位int|  c1->d 4位int |
++--------------------------------+ <-        c1->k 0x603000000020 | 
+|c1->k     4位int|     '暂无'    | 
++--------------------------------+
+```
+
+```c++
+#include <iostream>
+using namespace std;
+
+class X  { public: int i; };
+class A : public virtual X{ public:int j; };//虚继承
+class B : public virtual X{ public:int d; };
+class C : public A, public B{ public: int k; };
+
+class A1 : public X{ public:int j; };// 既不是虚继承也没有虚函数，总而言之就是没有虚表
+class B1 : public X{ public:int d; };
+class C1 : public A1, public B1{ public: int k; };
+
+int main()
+{
+    A *a= new A();
+    cout << &a << " - " << a << " | ";
+    cout << &a->i << " - " << &a->j << endl;
+    C *c= new C();
+    cout << &c << " - " << c << " | ";
+    cout << &c->i << " - " << &c->j << " - " << &c->d << " - " << &c->k << endl;
+    
+    A1 *a1= new A1();
+    cout << &a1 << " - " << a1 << " | ";
+    cout << &a1->i << " - " << &a1->j << endl;
+    C1 *c1= new C1();
+    cout << &c1 << " - " << c1 << " | ";
+    cout << &c1->A1::i << " - " << &c1->B1::i << " - " << &c1->j << " - " << &c1->d << " - " << &c1->k << endl;
+    return 0;
+}
+/*
+0x7ffe20e6a180 - 0x602000000010 | 0x60200000001c - 0x602000000018
+0x7ffe20e6a1a0 - 0x604000000090 | 0x6040000000b0 - 0x604000000098 - 0x6040000000a8 - 0x6040000000ac
+0x7ffe20e6a1c0 - 0x602000000030 | 0x602000000030 - 0x602000000034
+0x7ffe20e6a1e0 - 0x603000000010 | 0x603000000010 - 0x603000000018 - 0x603000000014 - 0x60300000001c - 0x603000000020
+*/
+```
+
+
+
+
+
+#### 不能被继承
 
 1. 什么类不能被继承（这个题目非常经典，我当时答出了private但是他说不好，我就没想到final我以为那个是java的）
 
@@ -410,9 +754,171 @@ C++里什么样的函数不能重载？
 >
 > 好像还有一个将构造和析构函数定义为`private`也可以。
 
+#### 菱形继承属性
+
+##### C同时继承A、B时，构造函数、析构函数调用顺序
+
+**谁在前面先构造谁，析构的时候恰好相反。**
+
+```c++
+#include  <bits/stdc++.h> 
+ 
+using namespace std;
+
+class Base{
+public:
+    Base(){ cout << "Base constructor ++ " << endl; }
+    ~Base(){ cout << "Base destructor -- " << endl; }
+};
+
+class A: public Base
+{
+public:
+    A()	{ cout << "A construct ++" << endl; }
+    A(int a):m_a(a){ cout << "A int construct: " << a << endl; }
+    ~A(){ cout << "A destructor --" << endl; }
+private:
+    int m_a; 
+};
+ 
+ 
+class B:public Base
+{
+public:
+    B(){ cout << "B construct ++" << endl; }
+    ~B(){ cout << "B destructor --" << endl; }
+};
+ 
+
+class C: public B, public A // 先调用谁的要看谁在前面
+{
+public:
+    C(){ cout << " C constructor ++" << endl; }
+    ~C(){ cout << " C destructor --" << endl; }
+};
+
+int main()
+{
+    C c;
+	return 0;
+}
+/*
+Base constructor ++ 
+B construct ++
+Base constructor ++ 
+A construct ++
+ C constructor ++
+ C destructor --
+A destructor --
+Base destructor -- 
+B destructor --
+Base destructor -- 
+*/
+```
+
+##### 虚函数表的分布
+
+参考虚函数那节，结论：**C继承B，A，有几个带虚表的类就有几个虚表。**
+
+##### 类的成员列表在地址空间的排列
+
+
+
+
+
+### 类和结构体
+
+#### 默认拷贝函数区别
+
+- **class 默认的拷贝构造函数实现的是浅拷贝。** 来自[c++的默认拷贝构造函数，从深度拷贝和浅拷贝说起](<https://blog.csdn.net/qq_29344757/article/details/76037255>) 
+- 将`class`换成`struct`是一样的，可见`struct`也是浅拷贝
+
+```c++
+class TestCls{
+public:
+    int a;
+    int *p;
+
+public:
+    TestCls()   //无参构造函数
+    {
+        std::cout<<"TestCls()"<<std::endl;
+        p = new int;
+    }
+
+    ~TestCls()     //析构函数
+    {
+        delete p;   
+        std::cout<<"~TestCls()"<<std::endl;
+    }
+};
+
+/* -- 相当于有一个默认的这玩意儿 --> 
+TestCls(const TestCls& testCls)
+{
+    a = testCls.a;
+    p = testCls.p;      //两个类的p指针指向的地址一致。
+}*/
+
+int main(){
+    TestCls t1;
+    TestCls t2 = t1;   //效果等同于TestCls t2(t1); 此处析构会崩溃
+    return 0;
+}
+```
+
+
+
 
 
 ## Static
+
+### 未经初始化的静态变量会被自动初始化为？
+
+#### 局部静态和全局静态谁的地址更低？
+
+```c++
+#include  <bits/stdc++.h> 
+ 
+using namespace std;
+
+static int aint;
+static char achar;
+
+void printH(){
+    static int add;
+    printf("[line : %d] val of add :%d address %p\n",__LINE__,add,&add);
+    add++;
+}
+
+static long along;
+
+int main(){
+    printf("[line : %d] val of aint :%d address %p\n",__LINE__,aint,&aint);
+    printf("[line : %d] val of achar :%c address %p\n",__LINE__,achar,&achar);//'\0' 啥也打印不出来
+    printf("[line : %d] val of along :%d address %p\n",__LINE__,along,&along);//
+    for(int i = 0; i < 4; ++i) printH();
+    return 0;
+}
+/*
+[line : 22] val of aint :0 address 0xd88860
+[line : 23] val of achar : address 0xd888a0
+[line : 24] val of along :0 address 0xd888e0 //全局地址不受影响
+[line : 15] val of add :0 address 0xd88820
+[line : 15] val of add :1 address 0xd88820
+[line : 15] val of add :2 address 0xd88820
+[line : 15] val of add :3 address 0xd88820  // 局部的地址更低，更靠近只读区
+*/
+```
+
+#### 初始化时间
+
+参考[C中全局变量和static变量的存储与初始化](<https://www.jianshu.com/p/3a87e581473a>)
+
+> 在C中，静态变量，即全局变量和static变量，是在程序运行前创建的
+>
+> - 其中已初始化的全局变量和static变量在编译汇编成目标文件时，初始值就已经保存在磁盘的`.data`段了，进程加载时将其映射到内存空间即可；
+> - 未初始化的全局变量需要进程加载时真正的为`.bss`段分配内存空间，并赋值为0。**静态变量的创建和初始化都是在运行前完成的**，切记C中不能动态初始化，这一点与C++不同。
 
 ## Hash
 
@@ -490,96 +996,6 @@ C++里什么样的函数不能重载？
 >
 > 上图是`InnoDB`主索引（同时也是数据文件）的示意图，可以看到叶节点包含了完整的数据记录。这种索引叫做聚集索引。因为`InnoDB`的数据文件本身要按主键聚集，所以`InnoDB`要求表必须有主键（`MyISAM`可以没有），如果没有显式指定，则`MySQL`系统会自动选择一个可以唯一标识数据记录的列作为主键，如果不存在这种列，则`MySQL`自动为`InnoDB`表生成一个隐含字段作为主键，这个字段长度为6个字节，类型为长整型。
 >
-> 
-
-
-
-
-
-1. 在涉及到父子类时构造与析构函数的执行顺序、多重继承时类的成员列表在地址空间的排列
-
-2. 会问你一些 C++11的东西（或者问boost 库，基本上都一样），这个你用过就用过，没有用过就说没用过不要装X，常见的 C++11 需要掌握的一些技术库我也列举一下auto 关键字、for-each 循环、右值及移动构造函数 + std::forward + std::move + stl 容器新增的 emplace_back() 方法、std::thread 库、std::chrono 库、智能指针系列（std::shared_ptr/std::unique_ptr/std::weak_ptr）(智能指针的实现原理一定要知道，最好是自己实现过)、线程库 std::thread + 线程同步技术库std::mutex/std::condition_variable/std::lock_guard 等、lamda表达式（JAVA 中现在也常常考察 lamda 表达式的作用）、std::bind/std::function 库、
-
-   其他的就是一些关键字的用法(override、final、delete)，还有就是一些细节如可以像 JAVA 一样在类成员变量定义处给出初始化值。
-
-   
-
-## 类和结构体
-
-### 默认拷贝函数
-
-```c++
-#include<bits/stdc++.h>
-
-using namespace std;
-
-int main(){
-    vector<int> t(10);
-    struct temp{
-     vector<int> ls;
-    };
-    
-    class ctp{
-        public:
-        vector<int> ls;
-    };
-    struct temp t1;
-    t1.ls.push_back(1);
-    cout << t1.ls.capacity() << " | ";
-    t1.ls.push_back(2);
-    cout << t1.ls.capacity() << " | ";
-    t1.ls.push_back(3);
-    cout << t1.ls.capacity() << " | ";
-    t1.ls.push_back(4);
-    cout << t1.ls.capacity() << " | ";
-    t1.ls.push_back(4);
-    cout << t1.ls.capacity() << " | ";// KEY 1 容量成本提升
-    cout << endl;
-    struct temp t2 = t1;
-    for(auto it = t2.ls.begin(); it != t2.ls.end(); ++it) cout << *it << " | ";
-    struct temp t3(t1);
-    for(auto it = t3.ls.begin(); it != t3.ls.end(); ++it) cout << *it << " | ";
-    cout <<"\n----------------------------"<< endl;
-    
-    t1.ls[4] = 5;
-    for(auto it = t2.ls.begin(); it != t2.ls.end(); ++it) cout << *it << " | ";
-    for(auto it = t3.ls.begin(); it != t3.ls.end(); ++it) cout << *it << " | ";
-    cout <<"\n----------------------------"<< endl;
-    
-    class ctp c1;
-    c1.ls = t;// vector 拷贝是深拷贝 ， struct & class 拷贝都是深拷贝
-    t[5] = 1;
-    c1.ls[5] = 2;
-    class ctp c2(c1);
-    class ctp c3 = c1;
-    t[4] = 5;
-    c1.ls[4] = 7;
-    for(auto it = t.begin(); it != t.end(); ++it) cout << *it << " | ";
-    cout << endl;
-    for(auto it = c1.ls.begin(); it != c1.ls.end(); ++it) cout << *it << " | ";
-    cout << endl;
-    for(auto it = c2.ls.begin(); it != c2.ls.end(); ++it) cout << *it << " | ";
-    cout << endl;
-    for(auto it = c3.ls.begin(); it != c3.ls.end(); ++it) cout << *it << " | ";
-    cout << endl;
-    return 0;
-}
-/*
-vector.capacity(): 1 | 2 | 4 | 4 | 8 | 
-struct copy: 
-1 | 2 | 3 | 4 | 4 | 1 | 2 | 3 | 4 | 4 | 
-----------------------------
-1 | 2 | 3 | 4 | 4 | 1 | 2 | 3 | 4 | 4 | 
-----------------------------
-
-vecotr modified:  0 | 0 | 0 | 0 | 5 | 1 | 0 | 0 | 0 | 0 | 
-class 1 modified: 0 | 0 | 0 | 0 | 7 | 2 | 0 | 0 | 0 | 0 | 
-class 2 unchange: 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 
-class 3 unchange: 0 | 0 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 0 |
-*/
-```
-
-
 
 
 
@@ -630,11 +1046,6 @@ void Single<T>::destory(){
 ```
 
 
-
-## C++和C的区别
-
-- 设计思想：C++是面向对象的语言，而C是面向过程的结构化编程语言
-- 语法：C++具有封装、继承和多态三种特性；C++相比C，增加多许多类型安全的功能，比如强制类型转换；C++支持范式编程，比如模板类、函数模板等
 
 ## [nullptr & NULL](<https://blog.csdn.net/u011068702/article/details/64906864>)
 
@@ -702,6 +1113,8 @@ void Single<T>::destory(){
 
 ### 智能指针
 
+智能指针系列（std::shared_ptr/std::unique_ptr/std::weak_ptr）(智能指针的实现原理一定要知道，最好是自己实现过)
+
 1. `auto_ptr`（c++98的方案，c++11已经抛弃）采用所有权模式。
 
    ```c++
@@ -739,8 +1152,6 @@ void Single<T>::destory(){
    ps1 = demo("alexia");
    cout << *ps2 << *ps1 << endl;
    ```
-
-> 
 
 3. `shared_ptr`
 
@@ -796,7 +1207,7 @@ void Single<T>::destory(){
 
    Output:
 
-   ```shel
+   ```shell
    pb.use_count() 2 | _pb.use_count() 2
    pa.use_count() 2 | _pa.use_count() 2
    wpb.use_count() 1 | wpa.use_count() 1 # 内存泄漏了
@@ -1022,7 +1433,7 @@ pf(p);                           // 通过函数指针pf调用函数fun
 >
 > ![](https://img-blog.csdn.net/20180621151715674?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ExNTkyOTc0ODUwMg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 >
-> C++代码在编译时会对函数进行重命名，从这个角度讲函数重载本质上还是不同的函数
+> **C++代码在编译时会对函数进行重命名，从这个角度讲函数重载本质上还是不同的函数**
 
 ## `new/delete`与`malloc/free`
 
@@ -1155,14 +1566,6 @@ int unittest_char() {
 
 上述是在`vs2015`下调试的结果，但是可以看出来`str1`和`str2`是按照`new`指针对待的，而`str3`和`str4`就是栈上的常量了。
 
-## `Lambda`
-
-**值捕获**
-
-**引用捕获**
-
-**隐式捕获**有两种方式，分别是[=]和[&]。[=]表示以值捕获的方式捕获外部变量，[&]表示以引用捕获的方式捕获外部变量。
-
 
 
 ## 宏
@@ -1218,7 +1621,7 @@ int main(void)
 }  
 ```
 
-`do{}while(0)`好处：
+### `do{}while(0)`好处
 
 1. 空的宏定义避免`warning`
 2. 完成比较复杂的实现。
@@ -1272,6 +1675,394 @@ int main(void)
 }
 ```
 
+## C++11
+
+- auto 关键字：推断数据类型的。
+
+### `std::thread`
+
+std::thread 库、`std::chrono` 库、线程库 `std::thread` + 线程同步技术库`std::mutex/std::condition_variable/std::lock_guard` 等、std::bind/std::function 库、
+
+> [C++11 并发指南一(C++11 多线程初探)](https://www.cnblogs.com/haippy/p/3235560.html)★
+>
+> 2013年的文章，介绍了`atomic,thread,mutex,condition_variable,futrue`等库，和一个简单的例子。
+>
+> [C++11 并发指南二(std::thread 详解)](https://www.cnblogs.com/haippy/p/3236136.html)
+>
+> **`std::thread`的构造方法** 简单来说就两个能用的，一个是带参数的构造，一个是移动构造。
+>
+> ```c++
+> #include <iostream>
+> #include <utility>
+> #include <thread>
+> #include <chrono>
+> #include <functional>
+> #include <atomic>
+>  
+> void f1(int n) // -- 这里换成左值引用会错，右值引用OK，我觉得，可以简单的理解为，thread函数调用了
+> {              //  一次参数，将传入的参数变成右值，就算这里用左值引用，引用的也不是main里的值了。
+>     for (int i = 0; i < 5; ++i) {
+>         std::cout << "Thread 1：" << ++n << " executing\n";
+>         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+>     }
+> }
+>  
+> void f2(int& n)
+> {
+>     for (int i = 0; i < 5; ++i) {
+>         std::cout << "Thread 2 executing : " << ++n << endl;
+>         std::this_thread::sleep_for(std::chrono::milliseconds(10));
+>     }
+> }
+>  
+> int main()
+> {
+>     int n = 0;
+>     std::thread t1; // t1 is not a thread
+>     std::thread t2(f1, n + 1); // pass by value
+>     std::thread t3(f2, std::ref(n)); // pass by reference
+>     std::thread t4(std::move(t3)); // t4 is now running f2(). t3 is no longer a thread
+>     cout << "When it running?" << endl;
+>     t2.join();
+>     t4.join();
+>     std::cout << "Final value of n is " << n << '\n';
+> }
+> /*
+> Thread 1：2 executing      
+> Thread 2 executing : 1
+> When it running?            -- 构造好了之后就开始运行了。
+> Thread 1：3 executing
+> Thread 2 executing : 2
+> Thread 1：4 executing
+> Thread 2 executing : 3
+> Thread 1：5 executing
+> Thread 2 executing : 4
+> Thread 1：6 executing       -- 如下面那节std::ref所言，thread默认调用的是变量的拷贝；
+> Thread 2 executing : 5         因此可以看到thread1的操作没能改变main里的n
+> Final value of n is 5
+> */
+> ```
+>
+> ```c++
+> #include <stdio.h>
+> #include <stdlib.h>
+> 
+> #include <chrono>    // std::chrono::seconds
+> #include <iostream>  // std::cout
+> #include <thread>    // std::thread, std::this_thread::sleep_for
+> 
+> void thread_task(int n) {
+>     std::this_thread::sleep_for(std::chrono::seconds(n));
+>     std::cout << "hello thread "
+>         << std::this_thread::get_id()
+>         << " paused " << n << " seconds" << std::endl;
+> }
+> 
+> /*
+>  * ===  FUNCTION  =========================================================
+>  *         Name:  main
+>  *  Description:  program entry routine.
+>  * ========================================================================
+>  */
+> int main(int argc, const char *argv[])
+> {
+>     std::thread threads[5];
+>     std::cout << "Spawning 5 threads...\n";
+>     for (int i = 0; i < 5; i++) {
+>         threads[i] = std::thread(thread_task, i + 1);
+>     }
+>     std::cout << "Done spawning threads! Now wait for them to join\n";
+>     for (auto& t: threads) {
+>         t.join();
+>     }
+>     std::cout << "All threads joined.\n";
+> 
+>     return EXIT_SUCCESS;
+> }  /* ----------  end of function main  ---------- */
+> /*(base) ejior@ejior-XPS-8930:~/huangyue/linuxcode$ ./exe 
+> Spawning 5 threads...
+> Done spawning threads! Now wait for them to join
+> hello thread 140134483089152 paused 1 seconds
+> hello thread 140134474696448 paused 2 seconds
+> hello thread 140134466303744 paused 3 seconds
+> hello thread 140134457911040 paused 4 seconds
+> hello thread 140134449518336 paused 5 seconds
+> All threads joined.*/
+> ```
+>
+> [cplusplus:mutex::try_lock()](<http://www.cplusplus.com/reference/mutex/mutex/try_lock/>)
+>
+> 
+
+
+
+**`jion`**
+
+> [c++11中关于std::thread的join的思考](https://www.cnblogs.com/liangjf/p/9801496.html)
+>
+> `std::thread`是c++11新引入的线程标准库，通过其可以方便的编写与平台无关的多线程程序，虽然对比针对平台来定制化多线程库会使性能达到最大，但是会丧失了可移植性，这样对比其他的高级语言，可谓是一个不足。终于在c++11承认多线程的标准，可谓可喜可贺！！！
+>
+> 在使用`std::thread`的时候，对创建的线程有两种操作：等待/分离，也就是`join/detach`操作。`join()`操作是在`std::thread t(func)`后“某个”合适的地方调用，其作用是回收对应创建的线程的资源，避免造成资源的泄露。`detach()`操作是在`std::thread t(func)`后马上调用，用于把被创建的线程与做创建动作的线程分离，分离的线程变为后台线程,其后，创建的线程的“死活”就与其做创建动作的线程无关，它的资源会被`init`进程回收。
+>
+> 在这里主要对`join`做深入的理解。
+
+
+
+#### `std::ref`
+
+> [std::ref()和&](<https://www.jianshu.com/p/277675675593>)
+>
+> 函数模板 `ref` 与 `cref` 是生成 [std::reference_wrapper](https://links.jianshu.com/go?to=https%3A%2F%2Fzh.cppreference.com%2Fw%2Fcpp%2Futility%2Ffunctional%2Freference_wrapper) 类型对象的帮助函数，它们用[模板实参推导](https://links.jianshu.com/go?to=https%3A%2F%2Fzh.cppreference.com%2Fw%2Fcpp%2Flanguage%2Ftemplate_argument_deduction)确定结果的模板实参。所以`std::ref()`返回的实际上是一个`reference_wrapper`而不是`T&`，可以从一个指向不能拷贝的类型的对象的引用生成一个可拷贝的对象。
+>
+> ```c++
+> #include <functional>
+> #include <iostream>
+>  
+> void f(int& n1, int& n2, const int& n3)
+> {
+>     std::cout << "In function: " << n1 << ' ' << n2 << ' ' << n3 << '\n';
+>     ++n1; // increments the copy of n1 stored in the function object
+>     ++n2; // increments the main()'s n2
+> }
+>  
+> int main()
+> {
+>     int n1 = 1, n2 = 2, n3 = 3;
+>     std::function<void()> bound_f = std::bind(f, n1, std::ref(n2), std::cref(n3));
+>     n1 = 4;
+>     n2 = 5;
+>     n3 = 6;
+>     std::cout << "Before function: " << n1 << ' ' << n2 << ' ' << n3 << '\n';
+>     bound_f();
+>     std::cout << "After function: " << n1 << ' ' << n2 << ' ' << n3 << '\n';
+> }
+> /*Before function: 4 5 6
+> In function: 1 5 6
+> After function: 4 6 6*/
+> ```
+>
+> C++11的设计者认为bind默认应该采用拷贝，如果使用者有需求，加上`std::ref()`即可。同理`std::thread`也是这样。
+
+#### `std::chrono`
+
+
+
+其他的就是一些关键字的用法(override、final、delete)，还有就是一些细节如可以像 JAVA 一样在类成员变量定义处给出初始化值。
+
+### `Lambda`
+
+**值捕获** & **引用捕获**
+
+**隐式捕获**有两种方式，分别是[=]和[&]。[=]表示以值捕获的方式捕获外部变量，[&]表示以引用捕获的方式捕获外部变量。
+
+### `for-each`
+
+for_each()事实上是个 function template --from [cplusplus](<http://www.cplusplus.com/reference/algorithm/for_each/?kw=for_each>)
+
+```c++
+template<class InputIterator, class Function>
+  Function for_each(InputIterator first, InputIterator last, Function fn)
+{
+  while (first!=last) {
+    fn (*first);
+    ++first;
+  }
+  return fn;      // or, since C++11: return move(fn);
+}
+```
+
+```c++
+// for_each example
+#include <iostream>     // std::cout
+#include <algorithm>    // std::for_each
+#include <vector>       // std::vector
+
+void myfunction (int i) {  // function:
+  std::cout << ' ' << i;
+}
+
+struct myclass {           // function object type:
+  void operator() (int i) {std::cout << ' ' << i;}
+} myobject;
+
+int main () {
+  std::vector<int> myvector;
+  myvector.push_back(10);
+  myvector.push_back(20);
+  myvector.push_back(30);
+
+  std::cout << "myvector contains:";
+  for_each (myvector.begin(), myvector.end(), myfunction);
+  std::cout << '\n';
+
+  // or:
+  std::cout << "myvector contains:";
+  for_each (myvector.begin(), myvector.end(), myobject);
+  std::cout << '\n';
+
+  return 0;
+}
+```
+
+### 移动语义&完美转发
+
+#### `std::forward`
+
+
+
+#### `std::move()`
+
+> [c++ 之 std::move 原理实现与用法总结](<https://blog.csdn.net/p942005405/article/details/84644069>)
+>
+> 在C++11中，标准库在`<utility>`中提供了一个有用的函数`std::move`，`std::move`并不能移动任何东西，**它唯一的功能是将一个左值强制转化为右值引用，继而可以通过右值引用使用该值，以用于移动语义**。从实现上讲，`std::move`基本等同于一个类型转换：
+>
+> ```c++
+> static_cast<T&&>(lvalue);
+> ```
+
+`左值、左值引用、右值、右值引用`
+
+> [C++ 11 左值，右值，左值引用，右值引用，std::move, std::foward](<https://blog.csdn.net/xiaolewennofollow/article/details/52559306>) 有例子
+>
+> 左值的声明符号为`&`， 为了和左值区分，右值的声明符号为`&&`
+>
+> **转移语义是和拷贝语义相对的**，可以类比文件的剪切与拷贝，当我们将文件从一个目录拷贝到另一个目录时，速度比剪切慢很多。
+
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+
+class MyString {
+private: 
+    char* _data; 
+    size_t   _len; 
+    void _init_data(const char *s) { 
+        _data = new char[_len+1]; 
+        memcpy(_data, s, _len); 
+        _data[_len] = '\0'; 
+    } 
+public: 
+    MyString() { 
+        _data = NULL; 
+        _len = 0; 
+    } 
+
+    MyString(const char* p) { 
+        _len = strlen (p); 
+        _init_data(p); 
+    } 
+
+    MyString(const MyString& str) { //拷贝构造
+        _len = str._len; 
+        _init_data(str._data); 
+        std::cout << "Copy Constructor is called! source: " << str._data << std::endl; 
+    } 
+
+    MyString(MyString &&str){ //移动构造
+        _data = str._data;
+        _len = str._len;
+        str._data = nullptr;
+        str._len = 0;
+        cout << "Move Constructor is called! source: " << _data <<endl;
+    }
+    
+    MyString& operator=(MyString&& str){
+        cout << "Move Assignment is called! source: " << str._data << endl;
+        if(this != &str){ // 避免自我复制
+            _data = str._data;
+            _len = str._len;
+            str._data = nullptr;
+            str._len = 0;
+        }
+        return *this;
+    }
+    MyString& operator=(const MyString& str) { //赋值构造
+        if (this != &str) { // 避免自我复制
+              _len = str._len; 
+              _init_data(str._data); 
+        } 
+        std::cout << "Copy Assignment is called! source: " << str._data << std::endl; 
+        return *this; 
+    } 
+
+    virtual ~MyString() { 
+        if (_data) delete []_data; 
+    } 
+}; 
+
+ int main() { 
+    MyString a; 
+    a = MyString("Hello"); 
+    std::vector<MyString> vec; 
+    vec.push_back(MyString("World")); //传入右值和传入左值就不一样了。
+    return 0;
+ }// 这里最需要注意的地方还是右值转换为右值引用之后也是可以操作的，需要手动至nullptr,不然会二次释放。
+```
+
+
+
+#### 移动语义完美转发？完美转发如何实现。
+
+[[c++11]我理解的右值引用、移动语义和完美转发](https://www.jianshu.com/p/d19fc8447eaa)★
+
+移动语义一般用于临时右值，对于很庞大的类，生成右值构造一下，传入过去又拷贝构造一下。然后右值再析构，多不划算呀。直接在生成右值后将右值引用的指针传入过去（移动语义）这样更香。
+
+#### emplace_back减少内存拷贝和移动
+
+> [C++ STL vector添加元素（push_back()和emplace_back()）详解](<http://c.biancheng.net/view/6826.html>)
+>
+> - `push_back()` 向容器尾部添加元素时，首先会创建这个元素，然后再将这个元素拷贝或者移动到容器中（如果是拷贝的话，事后会自行销毁先前创建的这个元素）；
+> - 而 `emplace_back()` 在实现时，则是直接在容器尾部创建这个元素，省去了拷贝或移动元素的过程。
+
+简而言之，`push_back`是先构造，再移动（没有移动就拷贝）；而`emplace_back`是直接在后端创建。
+
+```c++
+#include<bits/stdc++.h>
+using namespace std;
+
+class tempDemo
+{
+    int num;
+public:
+    tempDemo(int _num):num(_num){ cout << "This is constructor " << endl; }
+    tempDemo(const tempDemo& other):num(other.num){ cout << "This is copy constructor " << num << endl; }
+    tempDemo(tempDemo&& other):num(other.num){ cout << "This is move constructor " << num << endl;}
+    ~tempDemo(){ cout << "Destructor" << endl; }
+};
+
+ int main() { 
+    vector<tempDemo> one;
+     cout << "emplace_back: ";
+     one.emplace_back(2);
+     
+     cout << "push_back ";
+     one.push_back(3);
+     cout << endl;
+    return 0;
+ }
+/*
+emplace_back: This is constructor 
+push_back This is constructor 
+This is move constructor 3
+This is copy constructor 2  # 这里应该是因为动态扩容后的整体拷贝吧，可以用resize避免！
+Destructor
+Destructor                  # 这里应该是两个右值消亡的过程
+
+Destructor
+Destructor                  # 释放vector
+*/
+```
+
+
+
+##### `emplace_back`是如何实现的呢
+
+```c++
+
+```
+
+
+
 
 
 # `STL`
@@ -1292,7 +2083,7 @@ int main(void)
 
 不能用`memset`初始化，不然会让`iterator`失效好像。
 
-[vector扩容原理说明](https://blog.csdn.net/yangshiziping/article/details/52550291) 
+[vector扩容原理说明](https://blog.csdn.net/yangshiziping/article/details/52550291)
 
 > **`VS2015`中以1.5倍扩容，`GCC`以2倍扩容**
 > 为什么要这样扩容？
@@ -1300,7 +2091,7 @@ int main(void)
 
 ## `STL`的内存管理
 
-[STL内存管理详细分析](https://www.jianshu.com/p/3225a0851382)
+[`STL`内存管理详细分析](https://www.jianshu.com/p/3225a0851382)
 
 > 从总体上看，`STL`空间配置器分为两级，针对大内存的申请，调用第一级空间配置器，对于小内存的申请，则调用第二级配置器。
 >
@@ -1328,32 +2119,3 @@ int main(void)
 >
 > 
 
-## `std::move()`
-
-> [c++ 之 std::move 原理实现与用法总结](<https://blog.csdn.net/p942005405/article/details/84644069>)
->
-> 在C++11中，标准库在`<utility>`中提供了一个有用的函数`std::move`，`std::move`并不能移动任何东西，**它唯一的功能是将一个左值强制转化为右值引用，继而可以通过右值引用使用该值，以用于移动语义**。从实现上讲，`std::move`基本等同于一个类型转换：
->
-> ```c++
-> static_cast<T&&>(lvalue);
-> ```
-
-`左值、左值引用、右值、右值引用`
-
-> [C++ 11 左值，右值，左值引用，右值引用，std::move, std::foward](<https://blog.csdn.net/xiaolewennofollow/article/details/52559306>) 有例子
->
-> 左值的声明符号为`&`， 为了和左值区分，右值的声明符号为`&&`
->
-> **转移语义是和拷贝语义相对的**，可以类比文件的剪切与拷贝，当我们将文件从一个目录拷贝到另一个目录时，速度比剪切慢很多。
->
-> ————————————————
->
-> 这篇文章还说了右值引用的意义，真是对效率要求比较极致了。
-
-**移动语义完美转发？完美转发如何实现。**
-
-[[c++11]我理解的右值引用、移动语义和完美转发](https://www.jianshu.com/p/d19fc8447eaa)★
-
-移动语义一般用于临时右值，对于很庞大的类，生成右值构造一下，传入过去又拷贝构造一下。然后右值再析构，多不划算呀。直接在生成右值后将右值引用的指针传入过去（移动语义）这样更香。
-
-**emplace_back减少内存拷贝和移动**

@@ -82,6 +82,101 @@ CPU满了如何定位。进程->线程->之后呢？
 
 # 特效图形图像工程师 — 抖音短视频
 
+## C++11
+
+[C++11中的std::bind](<https://blog.csdn.net/u013654125/article/details/100140328>) & [std::function](<https://blog.csdn.net/weixin_39554266/article/details/82855294?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-2.channel_param>)
+
+```c++
+#include <functional>
+#include <iostream>
+
+using namespace std;
+ 
+int TestFunc(int a, char c, float f)
+{
+    cout << a << endl;
+    cout << c << endl;
+    cout << f << endl;
+ 
+    return a;
+}
+
+struct Foo {
+    Foo(int num) : num_(num) {}
+    void print_add(int i) const { std::cout << num_+i << '\n'; }
+    int num_;
+};
+ 
+void print_num(int i)
+{
+    std::cout << i << '\n';
+}
+ 
+struct PrintNum {
+    void operator()(int i) const
+    {
+        std::cout << i << '\n';
+    }
+};
+ 
+int main()
+{
+    //bind 绑定一个函数和其中的参数
+    auto bindFunc1 = bind(TestFunc, std::placeholders::_1, 'A', 100.1);
+    bindFunc1(10);
+ 
+    cout << "=================================\n";
+ 
+    auto bindFunc2 = bind(TestFunc, std::placeholders::_2, std::placeholders::_1, 100.1);
+    bindFunc2('B', 10);
+ 
+    cout << "=================================\n";
+ 
+    auto bindFunc3 = bind(TestFunc, std::placeholders::_2, std::placeholders::_3, std::placeholders::_1);
+    bindFunc3(100.1, 30, 'C');
+
+    /*       function      */
+    cout << "\n==============function===================\n";
+    // 存储自由函数
+    std::function<void(int)> f_display = print_num;
+    f_display(-9);
+ 
+    // 存储 lambda
+    std::function<void()> f_display_42 = []() { print_num(42); };
+    f_display_42();
+ 
+    // 存储到 std::bind 调用的结果
+    std::function<void()> f_display_31337 = std::bind(print_num, 31337);
+    f_display_31337();
+ 
+    // 存储到成员函数的调用
+    std::function<void(const Foo&, int)> f_add_display = &Foo::print_add;
+    const Foo foo(314159);
+    f_add_display(foo, 1);
+    f_add_display(314159, 1);
+ 
+    // 存储到数据成员访问器的调用
+    std::function<int(Foo const&)> f_num = &Foo::num_;
+    std::cout << "num_: " << f_num(foo) << '\n';
+ 
+    // 存储到成员函数及对象的调用
+    using std::placeholders::_1;
+    std::function<void(int)> f_add_display2 = std::bind( &Foo::print_add, foo, _1 );
+    f_add_display2(2);
+ 
+    // 存储到成员函数和对象指针的调用
+    std::function<void(int)> f_add_display3 = std::bind( &Foo::print_add, &foo, _1 );
+    f_add_display3(3);
+ 
+    // 存储到函数对象的调用
+    std::function<void(int)> f_display_obj = PrintNum();
+    f_display_obj(18);
+}
+
+```
+
+## 类的继承
+
 ```c++
 #include <stdio.h>
 
@@ -150,7 +245,13 @@ int main() {
 
 **如何判断一个数据类型？**
 
-`typeid(a) == tpyeid(int)?`
+1. `typeid(a) == tpyeid(int)?`
+
+2. `std::is_same`
+
+   > [C++11的模板类型判断——std::is_same和std::decay](<https://blog.csdn.net/czyt1988/article/details/52812797>)
+   >
+   > 在模板里可以通过std::is_same判断模板的类型，从而实现对不同类型的区别对待。
 
 **详细说下哪些基础类？**
 

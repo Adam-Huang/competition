@@ -294,3 +294,212 @@ AS select_statement
 [WITH [CASCADED | LOCAL] CHECK OPTION]
 ```
 
+[P13 - 查看删除](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=13>)
+
+```mysql
+show tables; # 就说和表很像了嘛，查看都一样
+drop view if exists veiw_city_country # 删除视图
+```
+
+## [P14 - 存储过程和存储函数](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=14>)
+
+[P15 - 创建、调用、查看、删除存储过程](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=15>)
+
+```mysql
+Create Procedure procedure_name ([proc_parameter[,...]])
+begin
+	-- SQL 语句
+end;
+
+mysql> delimiter $ # 声明$为新的分隔符
+
+mysql> create procedure pro_test1()
+    -> begin
+    -> select 'Hello sql';
+    -> end$
+```
+
+```mysql
+call pro_test1()$ # 调用，这到底什么意思啊-。-
+```
+
+```mysql
+select name from mysql.proc where db='db_name'; # 查询db_name数据库种所有的存储过程
+
+show procedure status; # 查询存储过程的状态信息
+
+show create procedure test.pro_test1() \G;# 查询 某个存储过程的定义
+mysql> show create procedure pro_test1 \G$
+*************************** 1. row ***************************
+           Procedure: pro_test1
+            sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+    Create Procedure: CREATE DEFINER=`root`@`%` PROCEDURE `pro_test1`()
+begin
+select 'Hello sql';
+end
+character_set_client: utf8mb4
+collation_connection: utf8mb4_0900_ai_ci
+  Database Collation: utf8mb4_0900_ai_ci
+1 row in set (0.00 sec)
+
+ERROR: 
+No query specified
+```
+
+```mysql
+drop procedure pro_test1$
+```
+
+### [P16 - 存储过程 - 语法](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=16>)
+
+```mysql
+declare var_name[] type [default value]
+
+create procedure pro_test2()            # 声明变量
+begin
+declare num int default 10;
+select concat('num 的值是：',num);
+end$
+
+mysql> call pro_test2$
++--------------------------------+
+| concat('num 的值是：',num)     |
++--------------------------------+
+| num 的值是：10                 |
++--------------------------------+
+1 row in set (0.00 sec)
+
+set num = num + 10;                     # 修改变量的值。
+select count(*) into num from city;
+        |-> 查询的结果 into 到变量 num 里
+```
+
+[P17 - if语句的使用](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=17>)
+
+```mysql
+if search_condition then statement_list
+[else search_condition then statement_list] ...
+[else statement_list]
+end if;
+
+create procedure pro_test3()
+begin
+declare height int default 175;
+declare description varchar(50) default '';
+if height >= 180 then
+set description = 'Good';
+elseif height >= 170 and hegiht < 180 then
+set description = 'Well';
+else
+set descritption = 'Just so so';
+end if;
+select concat('Height is:', height, 'so ', description);
+end$
+```
+
+[P18 - 输入参数](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=18>)
+
+```mysql
+create procedure _name_([in/out/inout] 参数名 参数类型); # 模型
+
+create procedure pro_test4(in height int)
+begin
+declare description varchar(50) default '';
+if height >= 180 then
+set description = 'Good';
+elseif height >= 170 and hegiht < 180 then
+set description = 'Well';
+else
+set descritption = 'Just so so';
+end if;
+select concat('Height is:', height, 'so ', description);
+end$
+
+call pro_test4(178)$ # 传入的相当于右值
+```
+
+[P19 - 输出参数](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=19>)
+
+```mysql
+create procedure pro_test5(in height int， out description varchar(50))
+begin
+if height >= 180 then
+set description = 'Good';
+elseif height >= 170 and hegiht < 180 then
+set description = 'Well';
+else
+set descritption = 'Just so so';
+end if;
+end$
+
+call pro_test5(188,@description)$ # 用户会话变量（会话结束释放）如何定义 | @@是系统变量
+select @description$
+```
+
+[P20 - case](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=20>)
+
+```mysql
+CASE case_value
+    WHEN when_value THEN statement_list
+    [WHEN when_value THEN statement_list]
+    [ELSE ]
+END CASE;
+
+create procedure pro_test6(in mon int)
+begin
+    declare ans varchar(50);
+    case 
+        when mon >= 1 and mon <= 3 then set ans = 'First quarel';
+        else set ans = 'Others';
+    end case
+    select concat('month: ',mon, 'the result is:', ans);
+end$
+```
+
+[P21 - while loop](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=21>)
+
+```mysql
+while search_condition do
+	statement_list
+end while;
+```
+
+[P22 - repeat]()
+
+```mysql
+REPEAT
+	statement_list
+	UNTIL search_condition # 满足条件则退出。注意这里没有分号。0.0
+END REPEAT
+```
+
+[P23 - loop](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=23>)
+
+```mysql
+[begin_label:] LOOP
+	statement_list
+END LOOP[end_label]
+leave
+
+c: loop
+	set ans = ans + n;
+	set n = n - 1;
+	IF n <= 0 then
+	LEAVE c;
+	END IF;
+end loop c;
+```
+
+[P24 - 游标](<https://www.bilibili.com/video/BV1UQ4y1P7Xr?p=24>)
+
+```mysql
+# 存储查询结果集的
+DECLARE  cursor_name CURSOR FOR select_list; # 创建
+OPEN cursor_name; # 打开游标
+FETCH cursor_name INTO var_name ; # 移动光标
+CLOSE cursor_name; # 关闭
+```
+
+
+
+ 

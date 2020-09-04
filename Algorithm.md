@@ -604,7 +604,24 @@ public:
 
 ## 博弈游戏
 
-[石子游戏](https://leetcode-cn.com/problems/stone-game/) 
+[486. 预测赢家](https://leetcode-cn.com/problems/predict-the-winner/)
+
+这个题和`877.石头游戏`很像，但是却不能像石头游戏一样投机取巧（直接算出奇偶的总数取大的），因为：
+
+1. `877`提到整体是奇数个（这个实际上没啥影响）；
+
+2. `877`指关注谁赢了，不关注如何获得最大的分数。**简而言之，数奇偶能确定是否赢，但不是最大分数**。比如
+
+   ```shell
+   [0,0,7,6,5,6,1] -> 1 6 5 0 6 7 0 # 取的方法
+                      1 2 1 2 1 2 1 # 1 + 5 + 6 = 12 | 6 + 0 + 7 = 13 玩家2胜利
+   ```
+
+   因此，不能说针对奇数剔除一个元素后，剩下的按奇偶计算得分值，还是要乖乖`dp`。
+
+
+
+[877. 石子游戏](https://leetcode-cn.com/problems/stone-game/)
 
 [1510. 石子游戏 IV](https://leetcode-cn.com/problems/stone-game-iv/) & [1025. 除数博弈](https://leetcode-cn.com/problems/divisor-game/)
 
@@ -715,14 +732,14 @@ I sloved it again [*6 May 2020*] with an error:
 `ll pow = (flag ? n : -(ll)n); // Attention`
 
 # Link
-[`21. Merge Two Sorted Lists`]()
+[21. 合并两个有序链表](https://leetcode-cn.com/problems/merge-two-sorted-lists/) 
 
 这个是基础，太重要了，必须快速、准确的写出代码。
 
 ## Two array or links
 [`2. Add Two Numbers`](https://leetcode-cn.com/problems/add-two-numbers/)
 
-[`88. Merge Sorted Array` ](https://leetcode-cn.com/problems/merge-sorted-array/)
+[`88. Merge Sorted Array`](https://leetcode-cn.com/problems/merge-sorted-array/)
 
 ## Ring
 ### [287. Find the Duplicate Number](https://leetcode-cn.com/problems/find-the-duplicate-number/)
