@@ -583,6 +583,49 @@ int main(){
 
 #### 移动构造函数
 
+##### [C++中为什么move construct需要加noexcept](https://www.jianshu.com/p/4848f331f8fd)★
+
+> 与通常我们使用try...catch结构来捕获异常所不同的是，使用`noexcept`关键字标记的函数在它抛出异常时，编译器会直接调用名为"std::terminate"的方法，来中断程序的执行，因此某种程度上可以有效阻止异常的传播和扩散。
+>
+> 不仅如此，在C++ 11中类结构隐式自动声明的或者是由程序员主动声明的不带有任何修饰符的析构函数，都会被编译器默认带上`noexcept (true)`标记，以表示这个析构函数不会抛出异常。这样做是由于，我们希望析构函数的执行只有两种结果，一种是成功的将类对象的资源释放，一种是由于某些原因，导致类资源无法被释放从而直接中断程序的运行。
+>
+> 抛出异常，意味着对于某种错误情况，我们不知道应该怎样处理，因此编译器将其抛给上层调用者来处理，但是析构函数的执行失败，通常会导致比如说资源泄漏或者空指针等潜在问题出现，因此相较于让程序继续运行，一个更加合理的方式是直接终止程序的运行。
+
+##### 何时合成默认的移动构造函数？
+
+不知道。[知乎](https://www.zhihu.com/question/52138073)有个例子，但是，不确定。自己测试的结果显示，合成移动构造函数好像对`STL`支持比较好；因此可以判定，若成员里有含有移动构造函数的成员，则会合成移动构造函数。这一点和合成的默认构造函数类似。
+
+```c++
+#include <iostream>
+using namespace std;
+ 
+class A
+{
+public:
+    int *p = new int;
+    string str = "baby";
+    vector<int> v;
+    A(){
+        cout << "constructor .." << endl;
+        for(int i = 0; i < 2; ++i) v.emplace_back(i);
+    }
+};
+
+int main()
+{
+    A a;
+    A b(std::move(a)); // 当然要传入右值了
+    cout << a.p << " " << a.str << " | ";
+    for(auto t:a.v) cout << t << " | ";
+    cout << endl;
+    // 0x602000000010  | 
+    cout << b.p << " " << b.str << " | ";
+    for(auto t:b.v) cout << t << " | ";
+    cout << endl;
+    // 0x602000000010 baby | 0 | 1 | 
+}
+```
+
 
 
 
@@ -2063,6 +2106,64 @@ Destructor                  # 释放vector
 
 
 
+## 异常
+
+[C++异常处理（try catch throw）完全攻略](http://c.biancheng.net/view/422.html)
+
+-   拋出异常而不加处理会导致函数 A 立即中止，在这种情况下，函数 B 可以选择捕获 A 拋出的异常进行处理，也可以选择置之不理。如果置之不理，这个异常就会被拋给 B 的调用者，以此类推。如果一层层的函数都不处理异常，异常最终会被拋给最外层的 main 函数。
+- main 函数应该处理异常。如果main函数也不处理异常，那么程序就会立即异常地中止。  
+
+
+
+- 简单来说，就是如果没有`throw`就会一直向调用者`throw`，直到有人捕获了，捕获后的代码才能运行。要看第一个`catch`哦
+
+- 捕获的类型要看`throw`了什么类型。
+
+- 异常声明：C++ 允许在函数声明和定义时，加上它所能拋出的异常的列表
+
+  ```c++
+  void func() throw (int, double, A, B, C); // or:
+  void func() throw (int, double, A, B, C){...}
+  ```
+
+  上面的写法表明` func` 可能拋出 int 型、double 型以及 A、B、C 三种类型的异常。异常声明列表可以在函数声明时写，也可以在函数定义时写。如果两处都写，则两处应一致。
+
+- C++ 程序在碰到某些异常时，即使程序中没有写 throw 语句，**也会自动拋出上述异常类的对象**。这些异常类还都有名为 what 的成员函数，返回字符串形式的异常描述信息。使用这些异常类需要包含头文件 `stdexcept`。
+
+### 如果函数声明成`noexcept`，在调用者还捕获的到嘛？
+
+答：捕获不到了。
+
+```c++
+#include<stdio.h>
+#include<iostream>
+
+using namespace std;
+
+class Solution {
+    int bt(vector<int>& nums1, vector<int>& nums2) noexcept {
+		throw -1; // terminate called after throwing an instance of 'int'
+        return ans;
+    }
+public:
+    int numTriplets(vector<int>&& nums1, vector<int>&& nums2) {
+        return bt(nums1,nums2) + bt(nums2, nums1);
+    }
+};
+
+int main()
+{
+    Solution s;
+	try{
+		printf("%s",s.numTriplets(vector<int>{7,4},vector<int>{5,2,8,9}));
+	}
+	catch(int e){
+		cout << "ho" << endl;
+	}
+    return 0;
+}
+```
+
 
 
 # `STL`
@@ -2115,7 +2216,15 @@ Destructor                  # 释放vector
 >
 > **空间的配置和释放**
 >
-> SGI以malloc()和free()完成内存配置与释放。为了解决小型区块所可能造成的内存破碎问题，SGI设计了双层级配置器，第一级直接使用malloc()和free()配置和释放内存空间，第二级配置器采用如下策略：当配置区块超过128 bytes 时，视为足够大，调用第一级配置器，当小于128 bytes 时，采用memory pool的整理方式。下面主要总结第二级配置器。
+> `SGI`以`malloc()`和`free()`完成内存配置与释放。为了解决小型区块所可能造成的内存破碎问题，`SGI`设计了双层级配置器，第一级直接使用`malloc()和free()`配置和释放内存空间，第二级配置器采用如下策略：当配置区块超过128 bytes 时，视为足够大，调用第一级配置器，当小于128 bytes 时，采用memory pool的整理方式。下面主要总结第二级配置器。
 >
 > 
 
+# Others
+
+## `sizeof`和`strlen`的区别
+
+`.\competition\C\dif_sizeof_strlen.cpp` & [Sizeof与Strlen的区别与联系](https://www.cnblogs.com/carekee/articles/1630789.html)
+
+1. `sizeof`是看数组大小的，如果传入指针，那只能当作指针变量处理；传入指针有两种情况，一是你故意的，转入传入一个指针，比如`char *string1 = "tencent20188888888";`；二就是你不是故意的，比如传入数组当作参数时，数组会按指针对待。
+2. `sizeof`看数组，看的是实际占用字节数。

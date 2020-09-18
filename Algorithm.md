@@ -120,6 +120,21 @@ void rotate(vector<int>& nums, int k) {
    __builtin_clz(x); //就是数一数这个数二进制前导有多少个零，clz: count leading zero 
    ```
 
+## 数数
+
+比如数第几个排列或快乐字符[这里有详细说明](#60.permutationsequence)，或者第几个丑数、神奇数字等。
+
+[878. 第 N 个神奇数字](https://leetcode-cn.com/problems/nth-magical-number/)
+
+关键是找周期，[参考题解：周期计算方法](https://leetcode-cn.com/problems/nth-magical-number/solution/di-n-ge-shen-qi-shu-zi-by-leetcode/) `M = L/A + L/B - 1`，`L是A、B的最小公倍数`，其实直观的理解可以认为L是最小的`A *m == B * n`的数，怎么计算呢？也很简单`L = A * B / gcd(A,B)`。
+
+```shell
+A = 2, B = 3; -> 1 2 3 4 5 6 7 8 9 10 ...
+                   A B A  A/B  A B A
+```
+
+[剑指 Offer 49. 丑数](https://leetcode-cn.com/problems/chou-shu-lcof/) 这是简化一点的
+
 
 
 
@@ -147,10 +162,11 @@ Key code: `if(i > 0 && nums[i] == nums[i - 1] && L[i - 1]) continue;` or `if(i >
 
 ### `60. Permutation Sequence`
 第`K`个排列，`K`th Permutation. 
-这个题和`1415. The k-th Lexicographical String of All Happy Strings of Length n`很类似，只不过那个限定了只使用`"abc"`。This question is very similar to `1415. The k-th Lexicographical String of All Happy Strings of Length n`, except that it is limited to the use of` "abc" `
-思路是一样的，**先计算一个数枝上的总的节点数**，利用商和余计算。有两点需要注意：The idea is the same, **first calculate the total number of nodes on a branch**, and Calculate with Quotient and Remainder.There are two points to note:
-1. `K`的取值范围不是`[1,K]`而是`[0,K - 1]`，因此计算前需要`--k`。The value range of `K` is not `[1, K]` but `[0, K-1]`, so `--k` is required before calculation.
-2. 排列每次都是从头开始计数的，不是从上一次的结果，这一点从前一题的全排列实现也能看出来。The permutation is counted from the beginning every time, not from the last result. This can also be seen from the realization of the whole permutation of the previous question.
+这个题和`1415. The k-th Lexicographical String of All Happy Strings of Length n`很类似，只不过那个限定了只使用`"abc"`。
+思路是一样的，**先计算一个数枝上的总的节点数**，利用商和余计算。有两点需要注意：
+
+1. `K`的取值范围不是`[1,K]`而是`[0,K - 1]`，因此计算前需要`--k`。
+2. 排列每次都是从头开始计数的，不是从上一次的结果，这一点从前一题的全排列实现也能看出来。
 FOR EXAMPLE:
 ```
                                                  n = 3, k = 3
@@ -642,7 +658,7 @@ public:
 [`1462. 课程安排 IV`](https://leetcode-cn.com/problems/course-schedule-iv/)
 这题用的数据结构算是邻接矩阵吧，一开始我用的是邻接表，显然很蠢。
 
-- [并查集思想 双百](https://leetcode-cn.com/problems/course-schedule-iv/solution/bing-cha-ji-si-xiang-shuang-bai-by-tiooo/)这个并查集很牛逼，很牛逼。
+- [并查集思想 双百](https://leetcode-cn.com/problems/course-schedule-iv/solution/bing-cha-ji-si-xiang-shuang-bai-by-tiooo/) 这个并查集很牛逼，很牛逼。
 - [Floyd也可以，但是效率稍弱一点](https://leetcode-cn.com/problems/course-schedule-iv/solution/floyd-by-over-lord/)
 
 ## 优化
@@ -694,13 +710,71 @@ public:
 };
 ```
 
+## MST
+
+[1584. 连接所有点的最小费用](https://leetcode-cn.com/problems/min-cost-to-connect-all-points/)
+
+最小生成树，记得有两种方法，一种叫`Kruskal`将边按从小到大排，枚举边；一种叫`Prim `以点为基础：本题我一开始用的是这种方法；虽然记得思想但是时间复杂度太高。这里，得到邻接矩阵后，**可以用以个数组维护当前集合到所有点的最小距离**。
+
+```c++
+class Solution {
+public:
+    int minCostConnectPoints(vector<vector<int>>& points) {
+        int n = points.size(), ans = 0;
+        vector<vector<int>> G(n, vector<int>(n));
+        for(int i = 0; i < n; ++i){
+            for(int j = i + 1; j < n; ++j){
+                int d = abs(points[i][0] - points[j][0]) + abs(points[i][1] - points[j][1]);
+                G[i][j] = d;
+                G[j][i] = d;
+            }
+        }
+        // 以上构建邻接矩阵
+        vector<int> L(n), mnD(n, 1e9);// 记录最小距离
+        L[0] = 1;
+        mnD[0] = 0;
+        int cnt = 0, now = 0;
+        while(cnt < n){
+            int mn = 1e9;
+            for(int i = 0; i < n; ++i){
+                if(!L[i] && mnD[i] < mn){ // 下一步去哪比较近
+                    now = i;              // 因为这里有记录，可以用O(n)的时间算出下一步。不然的话，需要
+                    mn = mnD[i];          // 从新遍历一下已在树中的节点，到所有未在树中的节点
+                }
+            }
+            L[now] = 1;
+            ++cnt;
+            ans += mnD[now];
+            for(int i = 0; i < n; ++i){  // 新节点进来后，看看对整体的最小距离有没有什么新贡献
+                if(!L[i] && mnD[i] > G[now][i]) mnD[i] = G[now][i];
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+
+
 
 
 ## 并查集
 
-### [1559. 二维网格图中探测环](https://leetcode-cn.com/problems/detect-cycles-in-2d-grid/)
+[1559. 二维网格图中探测环](https://leetcode-cn.com/problems/detect-cycles-in-2d-grid/)
 
 用并查集能维护一个连通性。这题就是。
+
+[685. 冗余连接 II](https://leetcode-cn.com/problems/redundant-connection-ii/)
+
+这个问题也是可以用并查集求解的，但是题解中普遍是先删除一条边后再构建并查集。因为并查集本质是个一维数组没法保留中间的边的信息。
+
+如果想保留中间的状态信息，可以用图。用邻接表去检测一个图是否是树状图。但每次也免不了要遍历一些整个图。所以暂时没看到好的方法。
+
+<模板>
+
+
 
 # Greedy
 
@@ -1235,6 +1309,7 @@ TreeNode* mergeTrees(TreeNode* t1, TreeNode* t2) {
 
 ## 二叉树的遍历
 [迭代方法](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/solution/mo-fang-di-gui-zhi-bian-yi-xing-by-sonp/)
+
 ```cpp
 class Solution {
 public:
