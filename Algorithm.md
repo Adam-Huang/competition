@@ -137,6 +137,14 @@ A = 2, B = 3; -> 1 2 3 4 5 6 7 8 9 10 ...
 
 
 
+## 众数
+
+[501. 二叉搜索树中的众数](https://leetcode-cn.com/problems/find-mode-in-binary-search-tree/)
+
+二叉搜索树，也就是相当于一个有序的数组，求众数。目前看到的`O(1)`空间方法都是采用两次遍历，第一次求出最多的数（众数）出现的次数；第二次遍历才考虑找到这个数。
+
+为了让程序更有健壮性，在统计众数时因为要取一个`pre`值，**这个值最好使用指针**，不然虽然样例能过，但是总是有风险。
+
 
 # Back Tracking
 ## `Permutations`
@@ -284,7 +292,8 @@ I. 统计各数字在`bit`位上出现的次数，这个思路要有。Count the
 II. 更进一步，如何利用`32`比特位自身的规则记录。Further, how to use the 32-bit own rule record
 
 # Binary
-## [1461. 检查一个字符串是否包含所有长度为 K 的二进制子串](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/)
+[1461. 检查一个字符串是否包含所有长度为 K 的二进制子串](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/)
+
 这题一开始也不会做，没有理解二进制的特点呀！！
 
 - [哈希表中存字符串，时间复杂度不是 O(n)，真正的 O(n) 解在这里。](https://leetcode-cn.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/solution/ha-xi-biao-zhong-cun-zi-fu-chuan-shi-jian-fu-za-du/)这个题解写的真好。
@@ -652,6 +661,22 @@ public:
 ```
 
 
+
+## 树形DP
+
+[968. 监控二叉树](https://leetcode-cn.com/problems/binary-tree-cameras/)
+
+这个题一开始想法是后序遍历；用`(root, place, watched)`三个维度记录当前这个点处于`1. no placed but watched`，`2. placed and watched`，`3. no placed and no watched`时的数值，这个时候呢比如当前`root`点的三种状态转换为：
+
+1. `(R,0,1)`要么就是左边孩子`(R->l,1,1)`要么就是右边孩子`(R->r,1,1)`
+
+这就问题来了，这两者是`或`的关系，谁小取谁？反正后序的扩展太多了，而且还有`nullptr`要处理。最后没想明白。
+
+[参考思路]()
+
+> 1. 用返回值作为状态，`0:未被监控到；1.放置了一个； 2. 被监控到`；然后根据状态各个分析
+
+所以，总结下来，这不是一个树形DP的问题，是贪心算法。DP太麻烦，而且可以分析出来这种最优情况是有一个固定规律的。
 
 # Graph
 
@@ -1237,6 +1262,16 @@ while(std::getline(ss, token, ',')) {
 > [C++字符串转换（stoi；stol；stoul；stoll；stoull；stof；stod；stold）](<https://blog.csdn.net/baidu_34884208/article/details/88342844>) 支持各种进制的`string`转换成`int`
 >
 > `ul`: `unsigned long`
+
+## KMP
+
+一个非常好的[解释](https://leetcode-cn.com/problems/shortest-palindrome/solution/tu-jie-kmpsuan-fa-by-yangbingjie/)
+
+### [214. 最短回文串](https://leetcode-cn.com/problems/shortest-palindrome/)
+
+找回文串，用O(n^2)的算法居然超时，是什么情况可以让这个算法在O(n)的时间跑完呢？ 
+
+
 
 # Tree
 
